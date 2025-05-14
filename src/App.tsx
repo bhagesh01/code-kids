@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Competitions from "./pages/Competitions";
 import CompetitionRoom from "./pages/CompetitionRoom";
+import CreateCompetition from "./pages/CreateCompetition";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/competitions" element={<Competitions />} />
+          <Route path="/competitions/create" element={<CreateCompetition />} />
           <Route path="/competitions/:id" element={<CompetitionRoom />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

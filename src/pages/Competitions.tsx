@@ -5,10 +5,13 @@ import CompetitionCard, { CompetitionData } from "@/components/CompetitionCard";
 import DifficultyFilter from "@/components/DifficultyFilter";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Building, Users, Trophy } from "lucide-react";
 
 const Competitions = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("all");
   
   // Mock data for upcoming competitions
   const upcomingCompetitions: CompetitionData[] = [
@@ -20,6 +23,7 @@ const Competitions = () => {
       maxParticipants: 20,
       startTime: "2025-05-20T15:30:00",
       duration: 45,
+      category: "arena"
     },
     {
       id: "comp-2",
@@ -29,6 +33,7 @@ const Competitions = () => {
       maxParticipants: 15,
       startTime: "2025-05-21T16:00:00",
       duration: 30,
+      category: "arena"
     },
     {
       id: "comp-3",
@@ -38,33 +43,43 @@ const Competitions = () => {
       maxParticipants: 25,
       startTime: "2025-05-22T14:00:00",
       duration: 60,
+      category: "arena"
     },
     {
       id: "comp-4",
-      title: "Object-Oriented Olympics",
+      title: "Google Frontend Challenge",
       difficulty: "Hard",
       participants: 6,
       maxParticipants: 10,
       startTime: "2025-05-23T17:30:00",
       duration: 90,
+      category: "hiring",
+      company: "Google",
+      positions: 5
     },
     {
       id: "comp-5",
-      title: "String Showdown",
+      title: "Amazon Algorithm Challenge",
       difficulty: "Medium",
       participants: 10,
       maxParticipants: 20,
       startTime: "2025-05-24T13:00:00",
       duration: 60,
+      category: "hiring",
+      company: "Amazon",
+      positions: 10
     },
     {
       id: "comp-6",
-      title: "Algorithm Arena",
+      title: "Microsoft Cloud Computing Challenge",
       difficulty: "Hard",
       participants: 5,
       maxParticipants: 12,
       startTime: "2025-05-25T16:00:00",
       duration: 75,
+      category: "hiring",
+      company: "Microsoft",
+      positions: 3
     },
   ];
   
@@ -78,6 +93,7 @@ const Competitions = () => {
       maxParticipants: 20,
       startTime: "2025-05-10T15:30:00",
       duration: 45,
+      category: "arena"
     },
     {
       id: "past-2",
@@ -87,15 +103,19 @@ const Competitions = () => {
       maxParticipants: 15,
       startTime: "2025-05-08T16:00:00",
       duration: 30,
+      category: "arena"
     },
     {
       id: "past-3",
-      title: "Function Masters",
+      title: "Meta Frontend Challenge",
       difficulty: "Medium",
       participants: 18,
       maxParticipants: 25,
       startTime: "2025-05-05T14:00:00",
       duration: 60,
+      category: "hiring",
+      company: "Meta",
+      positions: 5
     },
     {
       id: "past-4",
@@ -105,12 +125,18 @@ const Competitions = () => {
       maxParticipants: 10,
       startTime: "2025-05-01T17:30:00",
       duration: 90,
+      category: "arena"
     },
   ];
   
   // Filter and search functions
   const filterCompetitions = (competitions: CompetitionData[]) => {
     let filtered = competitions;
+    
+    // Apply category filter
+    if (category !== "all") {
+      filtered = filtered.filter(comp => comp.category === category);
+    }
     
     // Apply difficulty filter
     if (filter) {
@@ -136,6 +162,31 @@ const Competitions = () => {
       
       <main className="flex-grow container px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Coding Competitions</h1>
+        
+        {/* Category Tabs */}
+        <div className="mb-6">
+          <Tabs 
+            defaultValue="all" 
+            value={category} 
+            onValueChange={setCategory}
+            className="w-full"
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-3 mb-4">
+              <TabsTrigger value="all" className="flex items-center gap-2 hover-scale">
+                <Trophy className="h-4 w-4" /> 
+                <span>All</span>
+              </TabsTrigger>
+              <TabsTrigger value="hiring" className="flex items-center gap-2 hover-scale">
+                <Building className="h-4 w-4" /> 
+                <span>Hiring</span>
+              </TabsTrigger>
+              <TabsTrigger value="arena" className="flex items-center gap-2 hover-scale">
+                <Users className="h-4 w-4" /> 
+                <span>Arena</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
         
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
