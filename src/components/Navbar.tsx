@@ -12,9 +12,16 @@ import {
 import { Code, Home, User, LogOut } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
-const Navbar = () => {
+interface NavbarProps {
+  isLoggedIn?: boolean;
+}
+
+const Navbar = ({ isLoggedIn: isLoggedInProp }: NavbarProps = {}) => {
   const { user, isAuthenticated, logout } = useAuth();
   const [credits, setCredits] = useState(5);
+
+  // Use the auth context for the isAuthenticated state, but allow prop override for special cases
+  const isLoggedIn = isLoggedInProp !== undefined ? isLoggedInProp : isAuthenticated;
 
   const handleLogout = () => {
     logout();
@@ -29,7 +36,7 @@ const Navbar = () => {
         </Link>
         
         <div className="flex items-center space-x-4">
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <>
               <div className="hidden md:flex items-center mr-4 px-3 py-1 bg-secondary rounded-full text-sm font-medium animate-fade-in">
                 <span className="mr-1">Credits:</span>
