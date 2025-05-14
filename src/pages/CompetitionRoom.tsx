@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,22 +6,44 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import Confetti from "@/components/Confetti";
 import Editor from "@monaco-editor/react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CompetitionRoom = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
-  const [code, setCode] = useState("// Write your code here\n");
+  const [code, setCode] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [leaderboard, setLeaderboard] = useState<{name: string, progress: number}[]>([
     { name: "Player 1", progress: 75 },
     { name: "Player 2", progress: 60 },
     { name: "Player 3", progress: 40 },
-    { name: "You", progress: 25 },
+    { name: user?.name || "You", progress: 25 },
     { name: "Player 4", progress: 15 },
   ]);
+  const [testResults, setTestResults] = useState<{passed: boolean}[]>([]);
+  const [allTestsPassed, setAllTestsPassed] = useState(false);
+  
+  // Default code template
+  const codeTemplate = `// Write a function to find the largest number in an array
+// DO NOT use built-in Math.max() function
+
+function findLargest(arr) {
+  // Your code here
+  let largest = arr[0];
+  
+  // Implement your solution
+  
+  return largest;
+}
+
+// Example usage:
+// findLargest([5, 2, 9, 1, 7]) should return 9
+`;
   
   // Mock competition data
   const competitionData = {
@@ -48,11 +71,18 @@ const CompetitionRoom = () => {
       - Don't use built-in Math.max() function (challenge yourself!)
     `,
     tests: [
-      { input: "[5, 2, 9, 1, 7]", expected: "9", passed: false },
-      { input: "[10, 10, 10]", expected: "10", passed: false },
-      { input: "[-5, -10, -1, -3]", expected: "-1", passed: false },
+      { input: "[5, 2, 9, 1, 7]", expected: "9" },
+      { input: "[10, 10, 10]", expected: "10" },
+      { input: "[-5, -10, -1, -3]", expected: "-1" },
     ],
   };
+
+  // Initialize code with template
+  useEffect(() => {
+    if (!code) {
+      setCode(codeTemplate);
+    }
+  }, []);
 
   // Timer effect
   useEffect(() => {
@@ -65,7 +95,7 @@ const CompetitionRoom = () => {
           setLeaderboard(prev => 
             prev.map(player => ({
               ...player,
-              progress: player.name !== "You" ? 
+              progress: player.name !== (user?.name || "You") ? 
                 Math.min(100, player.progress + Math.floor(Math.random() * 10)) : 
                 player.progress
             }))
@@ -76,7 +106,7 @@ const CompetitionRoom = () => {
     } else if (timeLeft === 0 && !isCompleted) {
       setIsCompleted(true);
     }
-  }, [timeLeft, isCompleted]);
+  }, [timeLeft, isCompleted, user?.name]);
 
   // Format time display
   const formatTime = (seconds: number) => {
@@ -85,19 +115,80 @@ const CompetitionRoom = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
   
+  // Test the code
+  const testCode = () => {
+    try {
+      // Create a sandbox to evaluate the code safely
+      const sandboxCode = `
+        ${code}
+        
+        const results = [];
+        const tests = [
+          { input: [5, 2, 9, 1, 7], expected: 9 },
+          { input: [10, 10, 10], expected: 10 },
+          { input: [-5, -10, -1, -3], expected: -1 }
+        ];
+        
+        tests.forEach(test => {
+          try {
+            const result = findLargest(test.input);
+            const passed = result === test.expected;
+            results.push({ passed });
+          } catch (error) {
+            results.push({ passed: false, error: error.message });
+          }
+        });
+        
+        results;
+      `;
+      
+      // Use Function constructor to evaluate code (sandbox)
+      const evalFunction = new Function(sandboxCode);
+      const results = evalFunction();
+      
+      setTestResults(results);
+      
+      // Check if all tests passed
+      const allPassed = results.every(r => r.passed);
+      setAllTestsPassed(allPassed);
+      
+      if (allPassed) {
+        toast.success("All tests passed! You can now submit your solution.");
+      } else {
+        toast.error("Some tests failed. Please check your solution.");
+      }
+      
+      return results;
+    } catch (error) {
+      console.error("Error testing code:", error);
+      toast.error("There was an error testing your code. Check for syntax errors.");
+      return [];
+    }
+  };
+  
   // Handle code submission
   const handleSubmit = () => {
-    // In a real application, we would validate the code here
+    // First test the code
+    const results = testCode();
+    
+    // Check if all tests have passed
+    if (!results.every(r => r.passed)) {
+      toast.error("Cannot submit. Please fix the failing tests first.");
+      return;
+    }
+    
     setIsCompleted(true);
     setShowConfetti(true);
     
     // Update leaderboard to show player's final position
     setLeaderboard(prev => {
       const updated = prev.map(player => 
-        player.name === "You" ? { ...player, progress: 100 } : player
+        player.name === (user?.name || "You") ? { ...player, progress: 100 } : player
       );
       return updated.sort((a, b) => b.progress - a.progress);
     });
+    
+    toast.success("Solution submitted successfully!");
   };
   
   const handleEditorChange = (value: string | undefined) => {
@@ -110,7 +201,7 @@ const CompetitionRoom = () => {
       
       setLeaderboard(prev => 
         prev.map(player => 
-          player.name === "You" ? { ...player, progress } : player
+          player.name === (user?.name || "You") ? { ...player, progress } : player
         )
       );
     }
@@ -138,9 +229,18 @@ const CompetitionRoom = () => {
               {formatTime(timeLeft)}
             </div>
             {!isCompleted && (
-              <Button onClick={handleSubmit} className="hover-scale">
-                Submit Code
-              </Button>
+              <div className="flex space-x-2">
+                <Button onClick={testCode} variant="outline" className="hover-scale">
+                  Test Code
+                </Button>
+                <Button 
+                  onClick={handleSubmit} 
+                  className="hover-scale"
+                  disabled={!allTestsPassed}
+                >
+                  Submit Code
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -171,10 +271,10 @@ const CompetitionRoom = () => {
                     <div key={index} className="border rounded-md p-3">
                       <div className="text-sm"><span className="font-medium">Input:</span> {test.input}</div>
                       <div className="text-sm"><span className="font-medium">Expected:</span> {test.expected}</div>
-                      {isCompleted && (
+                      {testResults[index] && (
                         <div className="mt-2">
-                          <Badge variant={test.passed ? "default" : "destructive"}>
-                            {test.passed ? "Passed" : "Failed"}
+                          <Badge variant={testResults[index].passed ? "default" : "destructive"}>
+                            {testResults[index].passed ? "Passed" : "Failed"}
                           </Badge>
                         </div>
                       )}
@@ -219,7 +319,7 @@ const CompetitionRoom = () => {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <span className="w-6 text-muted-foreground">{index + 1}.</span>
-                        <span className={player.name === "You" ? "font-bold text-primary" : ""}>
+                        <span className={player.name === (user?.name || "You") ? "font-bold text-primary" : ""}>
                           {player.name}
                         </span>
                       </div>
@@ -233,7 +333,7 @@ const CompetitionRoom = () => {
               {isCompleted && (
                 <div className="mt-8 p-4 border rounded-md bg-primary/5 text-center">
                   <h3 className="font-bold text-xl mb-2">Competition Complete!</h3>
-                  <p className="text-muted-foreground mb-4">Your final rank: {leaderboard.findIndex(p => p.name === "You") + 1}</p>
+                  <p className="text-muted-foreground mb-4">Your final rank: {leaderboard.findIndex(p => p.name === (user?.name || "You")) + 1}</p>
                   <Button className="hover-scale w-full">View Solutions</Button>
                 </div>
               )}

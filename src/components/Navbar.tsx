@@ -9,14 +9,16 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Code, Home, User } from "lucide-react";
+import { Code, Home, User, LogOut } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 
-interface NavbarProps {
-  isLoggedIn?: boolean;
-}
-
-const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
+const Navbar = () => {
+  const { user, isAuthenticated, logout } = useAuth();
   const [credits, setCredits] = useState(5);
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <nav className="border-b bg-background sticky top-0 z-10 w-full">
@@ -27,7 +29,7 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
         </Link>
         
         <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <div className="hidden md:flex items-center mr-4 px-3 py-1 bg-secondary rounded-full text-sm font-medium animate-fade-in">
                 <span className="mr-1">Credits:</span>
@@ -38,8 +40,8 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full w-10 h-10 p-0 hover-scale">
                     <Avatar>
-                      <AvatarImage src="https://i.pravatar.cc/300" />
-                      <AvatarFallback>CK</AvatarFallback>
+                      <AvatarImage src={user?.profileImage || "https://i.pravatar.cc/300"} />
+                      <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase() || "CK"}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -56,8 +58,9 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
                       <span>Profile</span>
                     </DropdownMenuItem>
                   </Link>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => console.log("Logout clicked")}>
-                    Logout
+                  <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

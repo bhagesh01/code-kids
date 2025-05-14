@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Code } from "lucide-react";
+import { Code, X } from "lucide-react";
 import { 
   Tabs, 
   TabsContent, 
@@ -26,7 +26,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import type { UserRole } from "@/contexts/AuthContext";
 
 // Define schemas for different user roles
 const studentSchema = z.object({
@@ -67,10 +68,11 @@ const organizations = [
 ];
 
 const Signup = () => {
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState<UserRole>("student");
   const [isLoading, setIsLoading] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
+  const { signup } = useAuth();
   
   // Student form
   const studentForm = useForm<z.infer<typeof studentSchema>>({
@@ -107,15 +109,15 @@ const Signup = () => {
     },
   });
   
-  const handleSubmit = (data: any) => {
+  const handleSubmit = async (data: any) => {
     setIsLoading(true);
-    console.log("Form submitted:", { role, data });
     
-    // Simulate signup
-    setTimeout(() => {
+    try {
+      await signup(data, role as UserRole);
+      // Navigation will be handled by signup function
+    } catch (error) {
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+    }
   };
 
   const handleAddSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -151,7 +153,7 @@ const Signup = () => {
 
         <Tabs 
           value={role} 
-          onValueChange={setRole} 
+          onValueChange={(value) => setRole(value as UserRole)} 
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3 mb-4">

@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { ArrowRight, Code, Star, Sparkles } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -23,15 +26,24 @@ const Index = () => {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                <Link to="/signup">
-                  <Button size="lg" className="hover-scale">
-                    Start Coding Now
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/competitions">
+                {isAuthenticated ? (
+                  <Link to="/dashboard">
+                    <Button size="lg" className="hover-scale">
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/signup">
+                    <Button size="lg" className="hover-scale">
+                      Start Coding Now
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                <Link to={isAuthenticated ? "/competitions" : "/login"}>
                   <Button size="lg" variant="outline" className="hover-scale">
-                    Browse Competitions
+                    {isAuthenticated ? "Browse Competitions" : "Login to Continue"}
                   </Button>
                 </Link>
               </div>
@@ -85,9 +97,9 @@ const Index = () => {
               <p className="text-muted-foreground max-w-[600px]">
                 Join thousands of young coders and start competing today. Get 5 free credits every week!
               </p>
-              <Link to="/signup">
+              <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
                 <Button size="lg" className="mt-4 hover-scale">
-                  Create Your Free Account
+                  {isAuthenticated ? "Go to Dashboard" : "Create Your Free Account"}
                 </Button>
               </Link>
             </div>
