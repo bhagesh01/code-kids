@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { ArrowRight, Code, Star } from "lucide-react";
+import { ArrowRight, Code, Star, Sparkles } from "lucide-react";
 
 const Index = () => {
   return (
@@ -66,7 +66,7 @@ const Index = () => {
               </div>
               <div className="bg-background p-6 rounded-lg shadow-sm hover-card">
                 <div className="mb-4 p-3 rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center">
-                  <sparkles className="h-6 w-6 text-primary" />
+                  <Sparkles className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-medium mb-2">Track Progress</h3>
                 <p className="text-muted-foreground">

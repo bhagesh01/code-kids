@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface WeeklyTipProps {
   tip: {
@@ -15,7 +15,7 @@ const WeeklyTip: React.FC<WeeklyTipProps> = ({ tip }) => {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <sparkles className="h-5 w-5 text-primary animate-bounce-small" />
+            <Sparkles className="h-5 w-5 text-primary animate-bounce-small" />
             Weekly Tip
           </CardTitle>
         </div>

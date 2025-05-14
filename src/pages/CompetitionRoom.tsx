@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,9 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import Confetti from "@/components/Confetti";
-
-// Let's add the Monaco editor
-<lov-add-dependency>@monaco-editor/react@4.4.6</lov-add-dependency>
 import Editor from "@monaco-editor/react";
 
 const CompetitionRoom = () => {
