@@ -1,133 +1,155 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import CompetitionCard, { CompetitionData } from "@/components/CompetitionCard";
 import DifficultyFilter from "@/components/DifficultyFilter";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Building, Users, Trophy } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Competitions = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [upcomingCompetitions, setUpcomingCompetitions] = useState<CompetitionData[]>([]);
+  const [pastCompetitions, setPastCompetitions] = useState<CompetitionData[]>([]);
   
-  // Mock data for upcoming competitions
-  const upcomingCompetitions: CompetitionData[] = [
-    {
-      id: "comp-1",
-      title: "Array Adventures",
-      difficulty: "Easy",
-      participants: 12,
-      maxParticipants: 20,
-      startTime: "2025-05-20T15:30:00",
-      duration: 45,
-      category: "arena"
-    },
-    {
-      id: "comp-2",
-      title: "Loop Challenge",
-      difficulty: "Easy",
-      participants: 8,
-      maxParticipants: 15,
-      startTime: "2025-05-21T16:00:00",
-      duration: 30,
-      category: "arena"
-    },
-    {
-      id: "comp-3",
-      title: "Function Frenzy",
-      difficulty: "Medium",
-      participants: 15,
-      maxParticipants: 25,
-      startTime: "2025-05-22T14:00:00",
-      duration: 60,
-      category: "arena"
-    },
-    {
-      id: "comp-4",
-      title: "Google Frontend Challenge",
-      difficulty: "Hard",
-      participants: 6,
-      maxParticipants: 10,
-      startTime: "2025-05-23T17:30:00",
-      duration: 90,
-      category: "hiring",
-      company: "Google",
-      positions: 5
-    },
-    {
-      id: "comp-5",
-      title: "Amazon Algorithm Challenge",
-      difficulty: "Medium",
-      participants: 10,
-      maxParticipants: 20,
-      startTime: "2025-05-24T13:00:00",
-      duration: 60,
-      category: "hiring",
-      company: "Amazon",
-      positions: 10
-    },
-    {
-      id: "comp-6",
-      title: "Microsoft Cloud Computing Challenge",
-      difficulty: "Hard",
-      participants: 5,
-      maxParticipants: 12,
-      startTime: "2025-05-25T16:00:00",
-      duration: 75,
-      category: "hiring",
-      company: "Microsoft",
-      positions: 3
-    },
-  ];
-  
-  // Mock data for past competitions
-  const pastCompetitions: CompetitionData[] = [
-    {
-      id: "past-1",
-      title: "Array Basics",
-      difficulty: "Easy",
-      participants: 20,
-      maxParticipants: 20,
-      startTime: "2025-05-10T15:30:00",
-      duration: 45,
-      category: "arena"
-    },
-    {
-      id: "past-2",
-      title: "For Loop Fun",
-      difficulty: "Easy",
-      participants: 15,
-      maxParticipants: 15,
-      startTime: "2025-05-08T16:00:00",
-      duration: 30,
-      category: "arena"
-    },
-    {
-      id: "past-3",
-      title: "Meta Frontend Challenge",
-      difficulty: "Medium",
-      participants: 18,
-      maxParticipants: 25,
-      startTime: "2025-05-05T14:00:00",
-      duration: 60,
-      category: "hiring",
-      company: "Meta",
-      positions: 5
-    },
-    {
-      id: "past-4",
-      title: "Advanced Algorithms",
-      difficulty: "Hard",
-      participants: 10,
-      maxParticipants: 10,
-      startTime: "2025-05-01T17:30:00",
-      duration: 90,
-      category: "arena"
-    },
-  ];
+  useEffect(() => {
+    // In a real app, this would fetch from an API endpoint
+    // Here we're simulating with dynamic mock data based on user
+    
+    // Generate upcoming competitions (future dates)
+    const generateUpcoming = () => {
+      const upcoming: CompetitionData[] = [
+        {
+          id: "comp-1",
+          title: "Array Adventures",
+          difficulty: "Easy",
+          participants: 12,
+          maxParticipants: 20,
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // tomorrow
+          duration: 45,
+          category: "arena"
+        },
+        {
+          id: "comp-2",
+          title: "Loop Challenge",
+          difficulty: "Easy",
+          participants: 8,
+          maxParticipants: 15,
+          startTime: new Date(Date.now() + 1000 * 60 * 5).toISOString(), // 5 minutes from now
+          duration: 30,
+          category: "arena"
+        },
+        {
+          id: "comp-3",
+          title: "Function Frenzy",
+          difficulty: "Medium",
+          participants: 15,
+          maxParticipants: 25,
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(), // 2 hours from now
+          duration: 60,
+          category: "arena"
+        }
+      ];
+      
+      // Add hiring challenges if user is student or admin
+      if (user?.role === 'student' || user?.role === 'admin') {
+        upcoming.push(
+          {
+            id: "comp-4",
+            title: "Google Frontend Challenge",
+            difficulty: "Hard",
+            participants: 6,
+            maxParticipants: 10,
+            startTime: new Date(Date.now() + 1000 * 60 * 30).toISOString(), // 30 minutes from now
+            duration: 90,
+            category: "hiring",
+            company: "Google",
+            positions: 5
+          },
+          {
+            id: "comp-5",
+            title: "Amazon Algorithm Challenge",
+            difficulty: "Medium",
+            participants: 10,
+            maxParticipants: 20,
+            startTime: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days from now
+            duration: 60,
+            category: "hiring",
+            company: "Amazon",
+            positions: 10
+          }
+        );
+      }
+      
+      // Add recruiter's own competitions
+      if (user?.role === 'recruiter') {
+        upcoming.push(
+          {
+            id: "comp-6",
+            title: `${user.name}'s Coding Challenge`,
+            difficulty: "Medium",
+            participants: 3,
+            maxParticipants: 15,
+            startTime: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 1 hour from now
+            duration: 75,
+            category: "hiring",
+            company: "Your Company",
+            positions: 2
+          }
+        );
+      }
+      
+      return upcoming;
+    };
+    
+    // Generate past competitions (past dates)
+    const generatePast = () => {
+      return [
+        {
+          id: "past-1",
+          title: "Array Basics",
+          difficulty: "Easy",
+          participants: 20,
+          maxParticipants: 20,
+          startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
+          duration: 45,
+          category: "arena"
+        },
+        {
+          id: "past-2",
+          title: "For Loop Fun",
+          difficulty: "Easy",
+          participants: 15,
+          maxParticipants: 15,
+          startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(), // 12 days ago
+          duration: 30,
+          category: "arena"
+        },
+        {
+          id: "past-3",
+          title: "Meta Frontend Challenge",
+          difficulty: "Medium",
+          participants: 18,
+          maxParticipants: 25,
+          startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15).toISOString(), // 15 days ago
+          duration: 60,
+          category: "hiring",
+          company: "Meta",
+          positions: 5
+        }
+      ];
+    };
+    
+    setUpcomingCompetitions(generateUpcoming());
+    setPastCompetitions(generatePast());
+  }, [user]);
   
   // Filter and search functions
   const filterCompetitions = (competitions: CompetitionData[]) => {
@@ -146,7 +168,8 @@ const Competitions = () => {
     // Apply search query
     if (searchQuery) {
       filtered = filtered.filter(comp => 
-        comp.title.toLowerCase().includes(searchQuery.toLowerCase())
+        comp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (comp.company && comp.company.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
     
@@ -156,12 +179,29 @@ const Competitions = () => {
   const filteredUpcoming = filterCompetitions(upcomingCompetitions);
   const filteredPast = filterCompetitions(pastCompetitions);
   
+  const handleCreateCompetition = () => {
+    if (user?.role === 'recruiter' || user?.role === 'admin') {
+      navigate('/competitions/create');
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isLoggedIn={true} />
+      <Navbar />
       
       <main className="flex-grow container px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Coding Competitions</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Coding Competitions</h1>
+          
+          {(user?.role === 'recruiter' || user?.role === 'admin') && (
+            <Button 
+              onClick={handleCreateCompetition}
+              className="hover-scale"
+            >
+              Create Competition
+            </Button>
+          )}
+        </div>
         
         {/* Category Tabs */}
         <div className="mb-6">

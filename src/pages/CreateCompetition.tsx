@@ -1,6 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building, Users } from "lucide-react";
+import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -38,8 +40,16 @@ const competitionSchema = z.object({
 
 const CreateCompetition = () => {
   const navigate = useNavigate();
-  const [userRole] = useState("recruiter"); // This would come from auth context in a real app
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Redirect if not a recruiter or admin
+  useEffect(() => {
+    if (user && user.role !== 'recruiter' && user.role !== 'admin') {
+      toast.error("Only recruiters can create competitions");
+      navigate('/competitions');
+    }
+  }, [user, navigate]);
   
   const form = useForm<z.infer<typeof competitionSchema>>({
     resolver: zodResolver(competitionSchema),
@@ -50,7 +60,8 @@ const CreateCompetition = () => {
       startTime: "",
       duration: 60,
       maxParticipants: 20,
-      category: userRole === "recruiter" ? "hiring" : "arena",
+      category: "hiring",
+      company: user?.role === 'recruiter' ? user?.name + "'s Company" : undefined,
     },
   });
   
@@ -63,6 +74,7 @@ const CreateCompetition = () => {
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
+      toast.success("Competition created successfully!");
       navigate("/competitions");
       // In a real app, you would create the competition in the backend
     }, 1500);
@@ -70,7 +82,7 @@ const CreateCompetition = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isLoggedIn={true} />
+      <Navbar />
       
       <main className="flex-grow container px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Create New Competition</h1>
@@ -84,7 +96,7 @@ const CreateCompetition = () => {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Tabs 
-                  defaultValue={userRole === "recruiter" ? "hiring" : "arena"}
+                  defaultValue="hiring"
                   value={watchCategory}
                   onValueChange={(value) => form.setValue("category", value as "hiring" | "arena")}
                   className="w-full"
@@ -92,7 +104,7 @@ const CreateCompetition = () => {
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger 
                       value="arena" 
-                      disabled={userRole !== "admin"}
+                      disabled={user?.role !== 'admin'}
                       className="flex items-center gap-2 hover-scale"
                     >
                       <Users className="h-4 w-4" /> 
@@ -100,7 +112,6 @@ const CreateCompetition = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="hiring" 
-                      disabled={userRole !== "recruiter"}
                       className="flex items-center gap-2 hover-scale"
                     >
                       <Building className="h-4 w-4" /> 
