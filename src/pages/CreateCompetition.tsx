@@ -29,10 +29,10 @@ const competitionSchema = z.object({
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
   difficulty: z.enum(["Easy", "Medium", "Hard"]),
   startTime: z.string(),
-  duration: z.string().transform(val => Number(val)),
-  maxParticipants: z.string().transform(val => Number(val)),
+  duration: z.coerce.number().min(15).max(180),
+  maxParticipants: z.coerce.number().min(5).max(100),
   category: z.enum(["hiring", "arena"]),
-  positions: z.string().optional().transform(val => val ? Number(val) : undefined),
+  positions: z.coerce.number().optional(),
   company: z.string().optional(),
 });
 
@@ -48,8 +48,8 @@ const CreateCompetition = () => {
       description: "",
       difficulty: "Medium",
       startTime: "",
-      duration: "60",
-      maxParticipants: "20",
+      duration: 60,
+      maxParticipants: 20,
       category: userRole === "recruiter" ? "hiring" : "arena",
     },
   });

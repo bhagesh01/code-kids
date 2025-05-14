@@ -21,6 +21,7 @@ const Dashboard = () => {
       maxParticipants: 20,
       startTime: "2025-05-20T15:30:00",
       duration: 45,
+      category: "arena"
     },
     {
       id: "comp-2",
@@ -30,6 +31,7 @@ const Dashboard = () => {
       maxParticipants: 15,
       startTime: "2025-05-21T16:00:00",
       duration: 30,
+      category: "arena"
     },
     {
       id: "comp-3",
@@ -39,6 +41,7 @@ const Dashboard = () => {
       maxParticipants: 25,
       startTime: "2025-05-22T14:00:00",
       duration: 60,
+      category: "arena"
     },
     {
       id: "comp-4",
@@ -48,6 +51,9 @@ const Dashboard = () => {
       maxParticipants: 10,
       startTime: "2025-05-23T17:30:00",
       duration: 90,
+      category: "hiring",
+      company: "Google",
+      positions: 5
     },
   ];
 
