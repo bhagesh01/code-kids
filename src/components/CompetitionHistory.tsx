@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-interface HistoryItem {
+export interface HistoryItem {
   id: string;
   date: string;
   competition: string;
