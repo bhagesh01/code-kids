@@ -29,32 +29,32 @@ const Competitions = () => {
         {
           id: "comp-1",
           title: "Array Adventures",
-          difficulty: "Easy",
+          difficulty: "Easy" as const,
           participants: 12,
           maxParticipants: 20,
           startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // tomorrow
           duration: 45,
-          category: "arena"
+          category: "arena" as const
         },
         {
           id: "comp-2",
           title: "Loop Challenge",
-          difficulty: "Easy",
+          difficulty: "Easy" as const,
           participants: 8,
           maxParticipants: 15,
           startTime: new Date(Date.now() + 1000 * 60 * 5).toISOString(), // 5 minutes from now
           duration: 30,
-          category: "arena"
+          category: "arena" as const
         },
         {
           id: "comp-3",
           title: "Function Frenzy",
-          difficulty: "Medium",
+          difficulty: "Medium" as const,
           participants: 15,
           maxParticipants: 25,
           startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(), // 2 hours from now
           duration: 60,
-          category: "arena"
+          category: "arena" as const
         }
       ];
       
@@ -64,24 +64,24 @@ const Competitions = () => {
           {
             id: "comp-4",
             title: "Google Frontend Challenge",
-            difficulty: "Hard",
+            difficulty: "Hard" as const,
             participants: 6,
             maxParticipants: 10,
             startTime: new Date(Date.now() + 1000 * 60 * 30).toISOString(), // 30 minutes from now
             duration: 90,
-            category: "hiring",
+            category: "hiring" as const,
             company: "Google",
             positions: 5
           },
           {
             id: "comp-5",
             title: "Amazon Algorithm Challenge",
-            difficulty: "Medium",
+            difficulty: "Medium" as const,
             participants: 10,
             maxParticipants: 20,
             startTime: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days from now
             duration: 60,
-            category: "hiring",
+            category: "hiring" as const,
             company: "Amazon",
             positions: 10
           }
@@ -94,12 +94,12 @@ const Competitions = () => {
           {
             id: "comp-6",
             title: `${user.name}'s Coding Challenge`,
-            difficulty: "Medium",
+            difficulty: "Medium" as const,
             participants: 3,
             maxParticipants: 15,
             startTime: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 1 hour from now
             duration: 75,
-            category: "hiring",
+            category: "hiring" as const,
             company: "Your Company",
             positions: 2
           }
@@ -115,36 +115,36 @@ const Competitions = () => {
         {
           id: "past-1",
           title: "Array Basics",
-          difficulty: "Easy",
+          difficulty: "Easy" as const,
           participants: 20,
           maxParticipants: 20,
           startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
           duration: 45,
-          category: "arena"
+          category: "arena" as const
         },
         {
           id: "past-2",
           title: "For Loop Fun",
-          difficulty: "Easy",
+          difficulty: "Easy" as const,
           participants: 15,
           maxParticipants: 15,
           startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(), // 12 days ago
           duration: 30,
-          category: "arena"
+          category: "arena" as const
         },
         {
           id: "past-3",
           title: "Meta Frontend Challenge",
-          difficulty: "Medium",
+          difficulty: "Medium" as const,
           participants: 18,
           maxParticipants: 25,
           startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15).toISOString(), // 15 days ago
           duration: 60,
-          category: "hiring",
+          category: "hiring" as const,
           company: "Meta",
           positions: 5
         }
-      ];
+      ] as CompetitionData[];
     };
     
     setUpcomingCompetitions(generateUpcoming());
