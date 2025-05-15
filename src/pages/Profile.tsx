@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -42,7 +41,7 @@ const Profile = () => {
           id: "hist-3",
           date: "2025-04-28",
           competition: "Google Hiring Challenge",
-          difficulty: "Hard" as "Easy" | "Medium" | "Hard",
+          difficulty: "Hard" as const,
           rank: 2,
           participants: 20,
           score: 98,
