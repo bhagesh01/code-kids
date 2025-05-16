@@ -14,6 +14,7 @@ import TestResultsDialog from "@/components/competition/TestResultsDialog";
 import ProblemDescription from "@/components/competition/ProblemDescription";
 import CodeEditor from "@/components/competition/CodeEditor";
 import LiveLeaderboard from "@/components/competition/LiveLeaderboard";
+import HintSystem from "@/components/competition/HintSystem";
 
 // Import custom hooks
 import useCompetitionTimer from "@/hooks/useCompetitionTimer";
@@ -84,6 +85,20 @@ function findLargest(arr) {
       { input: "[10, 10, 10]", expected: "10" },
       { input: "[-5, -10, -1, -3]", expected: "-1" },
     ],
+    hints: [
+      { 
+        text: "Start by assuming the first element is the largest, then loop through the array to find any larger numbers.", 
+        penalty: 15 
+      },
+      { 
+        text: "Use a for loop to iterate through the array, comparing each element with your current 'largest' value.", 
+        penalty: 30 
+      },
+      { 
+        text: "If you find a number larger than your current 'largest', update the 'largest' variable with that new number.", 
+        penalty: 45 
+      },
+    ],
   };
 
   // Use custom hooks for code testing
@@ -95,12 +110,21 @@ function findLargest(arr) {
     testCode 
   } = useCodeTesting(code);
 
+  // Handle hint usage
+  const handleHintUsed = (penalty: number) => {
+    // Add penalty to the timer by reducing timeLeft
+    setTimeLeft((current) => {
+      if (current === null) return null;
+      return Math.max(0, current - penalty);
+    });
+  };
+
   // Handle competition completion
   const handleCompetitionComplete = () => {
     setIsCompleted(true);
   };
 
-  // Use custom timer hook
+  // Use custom timer hook with timeLeft setter exposed
   const { timeLeft, setTimeLeft, formatTime } = useCompetitionTimer(
     competitionData.duration * 60, 
     handleCompetitionComplete
@@ -251,13 +275,20 @@ function findLargest(arr) {
       
       <main className="flex-grow container px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Panel - Problem Description */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
           <ProblemDescription
             title={competitionData.title}
             description={competitionData.description}
             problem={competitionData.problem}
             tests={competitionData.tests}
             testResults={testResults}
+          />
+          
+          {/* Hint System */}
+          <HintSystem 
+            hints={competitionData.hints}
+            isCompleted={isCompleted}
+            onHintUsed={handleHintUsed}
           />
         </div>
         
