@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ const CompetitionRoom = () => {
     { name: user?.name || "You", progress: 25 },
     { name: "Player 4", progress: 15 },
   ]);
-  const [testResults, setTestResults] = useState<{passed: boolean, input?: string, expected?: string, actual?: string}[]>([]);
+  const [testResults, setTestResults] = useState<{passed: boolean, input?: string, expected?: string, actual?: string, error?: string}[]>([]);
   const [allTestsPassed, setAllTestsPassed] = useState(false);
   const [showTestDialog, setShowTestDialog] = useState(false);
   const [inLobby, setInLobby] = useState(false);
