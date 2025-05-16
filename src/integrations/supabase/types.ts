@@ -9,7 +9,151 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      achievements: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      competition_participants: {
+        Row: {
+          competition_id: string
+          completed: boolean
+          created_at: string
+          id: string
+          rank: number | null
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          completed?: boolean
+          created_at?: string
+          id?: string
+          rank?: number | null
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          completed?: boolean
+          created_at?: string
+          id?: string
+          rank?: number | null
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participants_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          created_at: string
+          date: string
+          description: string | null
+          difficulty: string
+          id: string
+          name: string
+          total_participants: number
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          difficulty: string
+          id?: string
+          name: string
+          total_participants?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          difficulty?: string
+          id?: string
+          name?: string
+          total_participants?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          profile_image: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+          profile_image?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          profile_image?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

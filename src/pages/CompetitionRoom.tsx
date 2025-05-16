@@ -10,11 +10,16 @@ import { toast } from "sonner";
 import Confetti from "@/components/Confetti";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Check, X, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const CompetitionRoom = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [lobbyTime, setLobbyTime] = useState<number | null>(null);
   const [code, setCode] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -25,8 +30,10 @@ const CompetitionRoom = () => {
     { name: user?.name || "You", progress: 25 },
     { name: "Player 4", progress: 15 },
   ]);
-  const [testResults, setTestResults] = useState<{passed: boolean}[]>([]);
+  const [testResults, setTestResults] = useState<{passed: boolean, input?: string, expected?: string, actual?: string}[]>([]);
   const [allTestsPassed, setAllTestsPassed] = useState(false);
+  const [showTestDialog, setShowTestDialog] = useState(false);
+  const [inLobby, setInLobby] = useState(false);
   
   // Default code template
   const codeTemplate = `// Write a function to find the largest number in an array
@@ -50,6 +57,8 @@ function findLargest(arr) {
     title: "Array Adventures",
     difficulty: "Easy",
     description: "Write a function that finds the largest element in an array of numbers.",
+    startTime: new Date(Date.now() + 60000), // Mock start time 1 minute from now
+    duration: 10, // in minutes
     problem: `
       # Find the Largest Number
 
@@ -84,9 +93,58 @@ function findLargest(arr) {
     }
   }, []);
 
-  // Timer effect
+  // Fetch competition data (in a real app, this would come from Supabase)
   useEffect(() => {
-    if (timeLeft > 0 && !isCompleted) {
+    // Mock fetching competition data
+    const fetchCompetitionData = async () => {
+      // In a real implementation, this would be a Supabase query
+      // const { data, error } = await supabase
+      //   .from('competitions')
+      //   .select('*')
+      //   .eq('id', id)
+      //   .single();
+      
+      // For now, we'll use the mock data
+      const mockStartTime = competitionData.startTime;
+      setStartTime(mockStartTime);
+      
+      const now = new Date();
+      
+      if (now < mockStartTime) {
+        // Competition hasn't started yet - show lobby
+        setInLobby(true);
+        const timeToStart = Math.floor((mockStartTime.getTime() - now.getTime()) / 1000);
+        setLobbyTime(timeToStart);
+      } else {
+        // Competition has started - show timer
+        setInLobby(false);
+        setTimeLeft(competitionData.duration * 60); // Convert minutes to seconds
+      }
+    };
+    
+    fetchCompetitionData();
+  }, [id]);
+
+  // Timer effect for lobby
+  useEffect(() => {
+    if (inLobby && lobbyTime !== null && lobbyTime > 0) {
+      const timer = setTimeout(() => {
+        setLobbyTime(lobbyTime - 1);
+        
+        // Check if lobby time is up
+        if (lobbyTime <= 1) {
+          setInLobby(false);
+          setTimeLeft(competitionData.duration * 60); // Start the competition timer
+          toast.success("Competition started!");
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [lobbyTime, inLobby]);
+  
+  // Timer effect for competition
+  useEffect(() => {
+    if (!inLobby && timeLeft !== null && timeLeft > 0 && !isCompleted) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
         
@@ -105,11 +163,13 @@ function findLargest(arr) {
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && !isCompleted) {
       setIsCompleted(true);
+      toast.error("Time's up! Competition ended.");
     }
-  }, [timeLeft, isCompleted, user?.name]);
+  }, [timeLeft, isCompleted, user?.name, inLobby]);
 
   // Format time display
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return "--:--";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -133,9 +193,19 @@ function findLargest(arr) {
           try {
             const result = findLargest(test.input);
             const passed = result === test.expected;
-            results.push({ passed });
+            results.push({ 
+              passed, 
+              input: JSON.stringify(test.input),
+              expected: test.expected.toString(),
+              actual: result.toString()
+            });
           } catch (error) {
-            results.push({ passed: false, error: error.message });
+            results.push({ 
+              passed: false, 
+              input: JSON.stringify(test.input),
+              expected: test.expected.toString(),
+              error: error.message 
+            });
           }
         });
         
@@ -152,11 +222,8 @@ function findLargest(arr) {
       const allPassed = results.every(r => r.passed);
       setAllTestsPassed(allPassed);
       
-      if (allPassed) {
-        toast.success("All tests passed! You can now submit your solution.");
-      } else {
-        toast.error("Some tests failed. Please check your solution.");
-      }
+      // Show the test results dialog
+      setShowTestDialog(true);
       
       return results;
     } catch (error) {
@@ -207,6 +274,55 @@ function findLargest(arr) {
     }
   };
   
+  // Render the lobby screen when waiting for competition to start
+  if (inLobby) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <header className="border-b sticky top-0 z-10 bg-background">
+          <div className="container flex items-center justify-between h-16 px-4">
+            <div className="flex items-center space-x-4">
+              <h1 className="font-bold">{competitionData.title}</h1>
+              <Badge className={
+                competitionData.difficulty === "Easy" ? "bg-green-500" : 
+                competitionData.difficulty === "Medium" ? "bg-yellow-500" : 
+                "bg-red-500"
+              }>
+                {competitionData.difficulty}
+              </Badge>
+            </div>
+          </div>
+        </header>
+        
+        <main className="flex-grow flex flex-col items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center space-y-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-2">Waiting for Competition to Start</h2>
+                  <p className="text-muted-foreground mb-4">The competition will begin shortly. Get ready!</p>
+                </div>
+                
+                <div className="flex items-center space-x-4 text-2xl font-bold">
+                  <Clock className="w-8 h-8 text-primary animate-pulse" />
+                  <span className="text-3xl">{formatTime(lobbyTime)}</span>
+                </div>
+                
+                <div className="w-full space-y-2">
+                  <h3 className="font-medium">Competition Details:</h3>
+                  <div className="text-sm space-y-1">
+                    <p><span className="font-medium">Title:</span> {competitionData.title}</p>
+                    <p><span className="font-medium">Difficulty:</span> {competitionData.difficulty}</p>
+                    <p><span className="font-medium">Duration:</span> {competitionData.duration} minutes</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen flex flex-col">
       {/* Room Header */}
@@ -225,7 +341,7 @@ function findLargest(arr) {
           
           {/* Timer */}
           <div className="flex items-center space-x-2">
-            <div className={`text-xl font-mono ${timeLeft < 60 ? "text-red-500 animate-pulse" : ""}`}>
+            <div className={`text-xl font-mono ${timeLeft !== null && timeLeft < 60 ? "text-red-500 animate-pulse" : ""}`}>
               {formatTime(timeLeft)}
             </div>
             {!isCompleted && (
@@ -341,6 +457,58 @@ function findLargest(arr) {
           </Card>
         </div>
       </main>
+      
+      {/* Test Results Dialog */}
+      <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Test Results</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {testResults.map((result, index) => (
+              <div key={index} className={`p-3 rounded-md border ${result.passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-medium">Test Case #{index + 1}</div>
+                  <Badge variant={result.passed ? "default" : "destructive"} className="flex items-center gap-1">
+                    {result.passed ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        <span>Passed</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="w-3 h-3" />
+                        <span>Failed</span>
+                      </>
+                    )}
+                  </Badge>
+                </div>
+                <div className="text-sm space-y-1">
+                  <div><span className="font-medium">Input:</span> {result.input}</div>
+                  <div><span className="font-medium">Expected:</span> {result.expected}</div>
+                  {result.actual && <div><span className="font-medium">Your output:</span> {result.actual}</div>}
+                  {result.error && <div className="text-red-500"><span className="font-medium">Error:</span> {result.error}</div>}
+                </div>
+              </div>
+            ))}
+
+            {allTestsPassed ? (
+              <div className="text-center text-green-600 font-medium">
+                All tests passed! You can now submit your solution.
+              </div>
+            ) : (
+              <div className="text-center text-amber-600 font-medium">
+                Some tests failed. Please fix your code and try again.
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button onClick={() => setShowTestDialog(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Show confetti on completion */}
       <Confetti active={showConfetti} />
