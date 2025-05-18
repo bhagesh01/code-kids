@@ -1,9 +1,19 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock } from "lucide-react";
+import { Clock, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface LobbyViewProps {
   competitionData: {
@@ -16,36 +26,37 @@ interface LobbyViewProps {
 }
 
 const LobbyView = ({ competitionData, onCompetitionStart }: LobbyViewProps) => {
-  const [lobbyTime, setLobbyTime] = useState<number | null>(null);
-  
-  useEffect(() => {
-    const now = new Date();
-    const timeToStart = Math.floor((competitionData.startTime.getTime() - now.getTime()) / 1000);
-    setLobbyTime(timeToStart);
-  }, [competitionData.startTime]);
-  
-  // Timer effect for lobby
-  useEffect(() => {
-    if (lobbyTime !== null && lobbyTime > 0) {
-      const timer = setTimeout(() => {
-        setLobbyTime(lobbyTime - 1);
-        
-        // Check if lobby time is up
-        if (lobbyTime <= 1) {
-          onCompetitionStart(competitionData.duration * 60);
-          toast.success("Competition started!");
-        }
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [lobbyTime, competitionData.duration, onCompetitionStart]);
+  const [showNotifyDialog, setShowNotifyDialog] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isNotified, setIsNotified] = useState(false);
   
   // Format time display
-  const formatTime = (seconds: number | null) => {
-    if (seconds === null) return "--:--";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+  
+  const handleNotifyMe = () => {
+    setShowNotifyDialog(true);
+  };
+  
+  const handleSubmitEmail = () => {
+    // Email validation
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
+    setIsNotified(true);
+    setShowNotifyDialog(false);
+    
+    // Logic to store the email for notifications would go here
+    // For now, we'll just show a success toast
+    toast.success(`You'll be notified at ${email} when the competition starts`);
+    
+    // Simulate the competition starting immediately for arena competitions
+    if (competitionData.startTime.getTime() <= Date.now()) {
+      onCompetitionStart(competitionData.duration * 60);
+    }
   };
 
   return (
@@ -70,27 +81,68 @@ const LobbyView = ({ competitionData, onCompetitionStart }: LobbyViewProps) => {
           <CardContent className="p-6">
             <div className="flex flex-col items-center space-y-6">
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Waiting for Competition to Start</h2>
-                <p className="text-muted-foreground mb-4">The competition will begin shortly. Get ready!</p>
+                <h2 className="text-2xl font-bold mb-2">Competition Details</h2>
+                <p className="text-muted-foreground mb-4">
+                  Get notified when this competition starts.
+                </p>
               </div>
               
-              <div className="flex items-center space-x-4 text-2xl font-bold">
-                <Clock className="w-8 h-8 text-primary animate-pulse" />
-                <span className="text-3xl">{formatTime(lobbyTime)}</span>
+              <div className="flex items-center space-x-4 text-xl font-bold">
+                <Clock className="w-6 h-6 text-primary" />
+                <span>Starts: {formatDate(competitionData.startTime)}</span>
               </div>
               
               <div className="w-full space-y-2">
-                <h3 className="font-medium">Competition Details:</h3>
                 <div className="text-sm space-y-1">
                   <p><span className="font-medium">Title:</span> {competitionData.title}</p>
                   <p><span className="font-medium">Difficulty:</span> {competitionData.difficulty}</p>
                   <p><span className="font-medium">Duration:</span> {competitionData.duration} minutes</p>
                 </div>
               </div>
+              
+              <Button 
+                className="w-full" 
+                onClick={handleNotifyMe}
+                disabled={isNotified}
+              >
+                {isNotified ? "Notification Set" : "Notify Me"}
+                <Bell className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
       </main>
+      
+      {/* Notification Dialog */}
+      <Dialog open={showNotifyDialog} onOpenChange={setShowNotifyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Get Notified</DialogTitle>
+            <DialogDescription>
+              Enter your email to receive notifications about this competition.
+              You'll be notified 5 minutes before the competition starts and when it begins.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNotifyDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitEmail}>
+              Set Notification
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

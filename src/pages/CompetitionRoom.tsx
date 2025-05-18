@@ -23,7 +23,6 @@ import useCodeTesting from "@/hooks/useCodeTesting";
 const CompetitionRoom = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const [startTime, setStartTime] = useState<Date | null>(null);
   const [code, setCode] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -35,6 +34,7 @@ const CompetitionRoom = () => {
     { name: "Player 4", progress: 15 },
   ]);
   const [inLobby, setInLobby] = useState(false);
+  const [isArenaCompetition, setIsArenaCompetition] = useState(false);
   
   // Default code template
   const codeTemplate = `// Write a function to find the largest number in an array
@@ -60,6 +60,7 @@ function findLargest(arr) {
     description: "Write a function that finds the largest element in an array of numbers.",
     startTime: new Date(Date.now() + 60000), // Mock start time 1 minute from now
     duration: 10, // in minutes
+    category: "arena", // Set to arena for testing
     problem: `
       # Find the Largest Number
 
@@ -141,18 +142,25 @@ function findLargest(arr) {
   useEffect(() => {
     // Mock fetching competition data
     const fetchCompetitionData = async () => {
-      const mockStartTime = competitionData.startTime;
-      setStartTime(mockStartTime);
+      // Check if this is an arena competition (practice mode)
+      setIsArenaCompetition(competitionData.category === "arena");
       
-      const now = new Date();
-      
-      if (now < mockStartTime) {
-        // Competition hasn't started yet - show lobby
-        setInLobby(true);
-      } else {
-        // Competition has started - show timer
+      if (competitionData.category === "arena") {
+        // Arena competitions are available immediately for practice
         setInLobby(false);
         setTimeLeft(competitionData.duration * 60); // Convert minutes to seconds
+      } else {
+        // For timed competitions, check if we need to show lobby
+        const now = new Date();
+        
+        if (now < competitionData.startTime) {
+          // Competition hasn't started yet - show lobby with notify option
+          setInLobby(true);
+        } else {
+          // Competition has started - show timer
+          setInLobby(false);
+          setTimeLeft(competitionData.duration * 60); // Convert minutes to seconds
+        }
       }
     };
     
@@ -248,13 +256,18 @@ function findLargest(arr) {
             }>
               {competitionData.difficulty}
             </Badge>
+            {isArenaCompetition && (
+              <Badge className="bg-blue-500">Practice Mode</Badge>
+            )}
           </div>
           
           {/* Timer */}
           <div className="flex items-center space-x-2">
-            <div className={`text-xl font-mono ${timeLeft !== null && timeLeft < 60 ? "text-red-500 animate-pulse" : ""}`}>
-              {formatTime(timeLeft)}
-            </div>
+            {!isArenaCompetition && (
+              <div className={`text-xl font-mono ${timeLeft !== null && timeLeft < 60 ? "text-red-500 animate-pulse" : ""}`}>
+                {formatTime(timeLeft)}
+              </div>
+            )}
             {!isCompleted && (
               <div className="flex space-x-2">
                 <Button onClick={testCode} variant="outline" className="hover-scale">
