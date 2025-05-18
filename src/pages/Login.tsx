@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +12,19 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
-  // If already authenticated, redirect to dashboard
-  if (isAuthenticated) {
-    navigate("/dashboard");
-    return null;
-  }
+  // Get the intended destination from location state, or default to dashboard
+  const from = location.state?.from?.pathname || "/dashboard";
+  
+  useEffect(() => {
+    // Only redirect if user is authenticated and component is mounted
+    if (isAuthenticated && user) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, from]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,13 +32,14 @@ const Login = () => {
     
     try {
       await login(email, password);
-      // Navigation will be handled by the login function
+      // Navigation will be handled by the useEffect hook above
     } catch (error) {
       // Error handling is done in login function with toast messages
       setIsLoading(false);
     }
   };
   
+  // Don't render a redirect, let the useEffect handle it
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-muted/30">
       <div className="mb-6 flex items-center gap-2 animate-fade-in">

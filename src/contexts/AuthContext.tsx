@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = "student" | "recruiter" | "admin";
+export type UserRole = "student" | "recruiter";
 
 interface User {
   id: string;
@@ -63,9 +63,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("AuthProvider initialized");
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state change event:", event);
         if (session) {
           const userData = {
             id: session.user.id,
@@ -74,9 +77,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             role: session.user.user_metadata.role as UserRole || "student",
             profileImage: session.user.user_metadata.profileImage,
           };
+          console.log("Setting user from session:", userData);
           setUser(userData);
           localStorage.setItem("codekids_user", JSON.stringify(userData));
         } else {
+          console.log("Clearing user data");
           setUser(null);
           localStorage.removeItem("codekids_user");
         }
@@ -86,11 +91,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Check for saved user data in localStorage on initial load
     const storedUser = localStorage.getItem("codekids_user");
     if (storedUser) {
+      console.log("Found user in localStorage");
       setUser(JSON.parse(storedUser));
     }
     
     // Check for existing Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session ? "Found session" : "No session");
       if (session) {
         const userData = {
           id: session.user.id,
@@ -99,6 +106,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           role: session.user.user_metadata.role as UserRole || "student",
           profileImage: session.user.user_metadata.profileImage,
         };
+        console.log("Setting user from initial session:", userData);
         setUser(userData);
         localStorage.setItem("codekids_user", JSON.stringify(userData));
       }
@@ -113,6 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Attempting login with:", email);
       // Try to login with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -120,9 +129,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (error) {
+        console.error("Supabase login error:", error);
         // Check if error is due to email not confirmed
         if (error.message.includes("Email not confirmed")) {
           toast.error("Please confirm your email before logging in.");
+          setIsLoading(false);
           throw new Error("Please confirm your email before logging in.");
         }
         
@@ -132,6 +143,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         );
 
         if (!foundUser) {
+          setIsLoading(false);
+          toast.error("Invalid email or password");
           throw new Error("Invalid email or password");
         }
 
@@ -147,7 +160,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem("codekids_user", JSON.stringify(userData));
         setUser(userData);
         toast.success(`Welcome back, ${userData.name}!`);
-        navigate("/dashboard");
+        console.log("Login successful with mock user:", userData);
+        // No need to navigate here, let the component handle it
       } else if (data.user) {
         const userData = {
           id: data.user.id,
@@ -161,9 +175,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem("codekids_user", JSON.stringify(userData));
         setUser(userData);
         toast.success(`Welcome back, ${userData.name}!`);
-        navigate("/dashboard");
+        console.log("Login successful with Supabase user:", userData);
+        // No need to navigate here, let the component handle it
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       toast.error(error.message || "Login failed");
       throw error;
     } finally {
@@ -221,7 +237,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           return;
         }
       }
-      // We've removed the admin logic as requested
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
       throw error;
