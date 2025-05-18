@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,12 +47,6 @@ const recruiterSchema = z.object({
   organizationName: z.string().min(1, { message: "Organization name is required." }),
 });
 
-const adminSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
-  adminCode: z.string().min(6, { message: "Admin code must be at least 6 characters." }),
-});
-
 const organizations = [
   "Google", 
   "Meta", 
@@ -72,7 +66,14 @@ const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
-  const { signup } = useAuth();
+  const { signup, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  // If already authenticated, redirect to dashboard
+  if (isAuthenticated) {
+    navigate("/dashboard");
+    return null;
+  }
   
   // Student form
   const studentForm = useForm<z.infer<typeof studentSchema>>({
@@ -96,16 +97,6 @@ const Signup = () => {
       phoneNumber: "",
       linkedInProfile: "",
       organizationName: "",
-    },
-  });
-
-  // Admin form
-  const adminForm = useForm<z.infer<typeof adminSchema>>({
-    resolver: zodResolver(adminSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      adminCode: "",
     },
   });
   
@@ -156,10 +147,9 @@ const Signup = () => {
           onValueChange={(value) => setRole(value as UserRole)} 
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="student" className="hover-scale">Student</TabsTrigger>
             <TabsTrigger value="recruiter" className="hover-scale">Recruiter</TabsTrigger>
-            <TabsTrigger value="admin" className="hover-scale">Admin</TabsTrigger>
           </TabsList>
 
           {/* Student Signup Form */}
@@ -388,75 +378,6 @@ const Signup = () => {
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating account..." : "Sign Up as Recruiter"}
-                  </Button>
-                  <div className="text-sm text-center text-muted-foreground">
-                    Already have an account?{" "}
-                    <Link to="/login" className="text-primary hover-underline">
-                      Login
-                    </Link>
-                  </div>
-                </CardFooter>
-              </form>
-            </Form>
-          </TabsContent>
-
-          {/* Admin Signup Form */}
-          <TabsContent value="admin">
-            <Form {...adminForm}>
-              <form onSubmit={adminForm.handleSubmit(handleSubmit)}>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={adminForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="admin@codekids.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={adminForm.control}
-                    name="adminCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Admin Code</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="Enter secure admin code" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={adminForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          At least 8 characters
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-                <CardFooter className="flex flex-col space-y-4">
-                  <Button 
-                    type="submit" 
-                    className="w-full hover-scale" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Creating account..." : "Sign Up as Administrator"}
                   </Button>
                   <div className="text-sm text-center text-muted-foreground">
                     Already have an account?{" "}

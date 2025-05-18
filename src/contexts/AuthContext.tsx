@@ -55,14 +55,6 @@ const MOCK_USERS = [
     role: "recruiter" as UserRole,
     profileImage: "https://i.pravatar.cc/300?img=2",
   },
-  {
-    id: "user3",
-    email: "admin@example.com",
-    password: "password123",
-    name: "Admin User",
-    role: "admin" as UserRole,
-    profileImage: "https://i.pravatar.cc/300?img=3",
-  },
 ];
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
@@ -128,6 +120,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (error) {
+        // Check if error is due to email not confirmed
+        if (error.message.includes("Email not confirmed")) {
+          toast.error("Please confirm your email before logging in.");
+          throw new Error("Please confirm your email before logging in.");
+        }
+        
         // Fallback to mock users for development
         const foundUser = MOCK_USERS.find(
           (u) => u.email === email && u.password === password
@@ -149,6 +147,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem("codekids_user", JSON.stringify(userData));
         setUser(userData);
         toast.success(`Welcome back, ${userData.name}!`);
+        navigate("/dashboard");
       } else if (data.user) {
         const userData = {
           id: data.user.id,
@@ -162,9 +161,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem("codekids_user", JSON.stringify(userData));
         setUser(userData);
         toast.success(`Welcome back, ${userData.name}!`);
+        navigate("/dashboard");
       }
-      
-      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Login failed");
       throw error;
@@ -194,19 +192,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (error) throw error;
         
         if (data.user) {
-          const newUser = {
-            id: data.user.id,
-            email: data.user.email as string,
-            name: userData.fullName,
-            role: role,
-            profileImage: "https://i.pravatar.cc/300?img=5", // Default avatar
-          };
-          
-          // Save to localStorage
-          localStorage.setItem("codekids_user", JSON.stringify(newUser));
-          setUser(newUser);
-          toast.success("Account created successfully!");
-          navigate("/dashboard");
+          toast.success("Account created! Please check your email to confirm your account.");
+          navigate("/login");
+          return;
         }
       }
       // For recruiter role
@@ -228,57 +216,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (error) throw error;
         
         if (data.user) {
-          const newUser = {
-            id: data.user.id,
-            email: data.user.email as string,
-            name: userData.name,
-            role: role,
-            profileImage: "https://i.pravatar.cc/300?img=2", // Default avatar
-          };
-          
-          // Save to localStorage
-          localStorage.setItem("codekids_user", JSON.stringify(newUser));
-          setUser(newUser);
-          toast.success("Account created successfully!");
-          navigate("/dashboard");
+          toast.success("Account created! Please check your email to confirm your account.");
+          navigate("/login");
+          return;
         }
       }
-      // For admin role - in a real app this would need special verification
-      else if (role === "admin") {
-        // Check admin code (in real app, this would be more secure)
-        if (userData.adminCode !== "admin123") {
-          throw new Error("Invalid admin code");
-        }
-        
-        const { data, error } = await supabase.auth.signUp({
-          email: userData.email,
-          password: userData.password,
-          options: {
-            data: {
-              role: role,
-              adminVerified: true,
-            }
-          }
-        });
-        
-        if (error) throw error;
-        
-        if (data.user) {
-          const newUser = {
-            id: data.user.id,
-            email: data.user.email as string,
-            name: data.user.email.split('@')[0],
-            role: role,
-            profileImage: "https://i.pravatar.cc/300?img=3", // Default avatar
-          };
-          
-          // Save to localStorage
-          localStorage.setItem("codekids_user", JSON.stringify(newUser));
-          setUser(newUser);
-          toast.success("Admin account created successfully!");
-          navigate("/dashboard");
-        }
-      }
+      // We've removed the admin logic as requested
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
       throw error;
