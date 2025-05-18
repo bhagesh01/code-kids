@@ -1,10 +1,9 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = "student" | "recruiter";
+export type UserRole = "student" | "recruiter" | "admin";
 
 interface User {
   id: string;
@@ -54,6 +53,14 @@ const MOCK_USERS = [
     name: "Jane Smith",
     role: "recruiter" as UserRole,
     profileImage: "https://i.pravatar.cc/300?img=2",
+  },
+  {
+    id: "admin",
+    email: "admin@example.com",
+    password: "password123",
+    name: "Admin User",
+    role: "admin" as UserRole,
+    profileImage: "https://i.pravatar.cc/300?img=3",
   },
 ];
 
@@ -225,6 +232,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               phoneNumber: userData.phoneNumber,
               linkedInProfile: userData.linkedInProfile,
               organizationName: userData.organizationName,
+            }
+          }
+        });
+        
+        if (error) throw error;
+        
+        if (data.user) {
+          toast.success("Account created! Please check your email to confirm your account.");
+          navigate("/login");
+          return;
+        }
+      }
+      // For admin role
+      else if (role === "admin") {
+        const { data, error } = await supabase.auth.signUp({
+          email: userData.email,
+          password: userData.password,
+          options: {
+            data: {
+              name: userData.name,
+              role: role,
             }
           }
         });
