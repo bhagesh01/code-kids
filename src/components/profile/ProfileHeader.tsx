@@ -1,6 +1,5 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ProgressBadge from "@/components/ProgressBadge";
 
 interface ProfileHeaderProps {
@@ -19,13 +18,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, userStats }) => {
   return (
     <div className="mb-8">
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-        <Avatar className="h-24 w-24 border-2 border-primary">
-          <AvatarImage src={user.profileImage} alt={user.name} />
-          <AvatarFallback className="text-2xl">
-            {user.name.substring(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        
         <div className="flex-1">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 text-center md:text-left">{user.name}</h1>
           <div className="flex flex-wrap gap-2 mb-3 justify-center md:justify-start">

@@ -2,14 +2,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Code, Home, User, LogOut } from "lucide-react";
+import { Code, Home, User, LogOut, Menu } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NavbarProps {
@@ -46,10 +45,7 @@ const Navbar = ({ isLoggedIn: isLoggedInProp }: NavbarProps = {}) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full w-10 h-10 p-0 hover-scale">
-                    <Avatar>
-                      <AvatarImage src={user?.profileImage || "https://i.pravatar.cc/300"} />
-                      <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase() || "CK"}</AvatarFallback>
-                    </Avatar>
+                    <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 animate-scale-in">
