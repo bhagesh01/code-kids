@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,8 +25,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
-import type { UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
+import type { UserRole } from "@/contexts/auth";
 
 // Define schemas for different user roles
 const studentSchema = z.object({
