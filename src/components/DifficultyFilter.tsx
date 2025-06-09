@@ -1,50 +1,44 @@
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+
+type DifficultyFilter = "All" | "Easy" | "Medium" | "Hard";
 
 interface DifficultyFilterProps {
-  onFilterChange: (difficulty: string | null) => void;
+  value: DifficultyFilter;
+  onValueChange: (difficulty: DifficultyFilter) => void;
 }
 
-const DifficultyFilter: React.FC<DifficultyFilterProps> = ({ onFilterChange }) => {
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-
-  const handleFilterClick = (difficulty: string | null) => {
-    if (activeFilter === difficulty) {
-      setActiveFilter(null);
-      onFilterChange(null);
-    } else {
-      setActiveFilter(difficulty);
-      onFilterChange(difficulty);
-    }
+const DifficultyFilter: React.FC<DifficultyFilterProps> = ({ value, onValueChange }) => {
+  const handleFilterClick = (difficulty: DifficultyFilter) => {
+    onValueChange(difficulty);
   };
 
   return (
     <div className="flex flex-wrap gap-2">
       <Button
-        variant={activeFilter === null ? "default" : "outline"}
-        className={`rounded-full hover-scale ${activeFilter === null ? "bg-primary" : ""}`}
-        onClick={() => handleFilterClick(null)}
+        variant={value === "All" ? "default" : "outline"}
+        className={`rounded-full hover-scale ${value === "All" ? "bg-primary" : ""}`}
+        onClick={() => handleFilterClick("All")}
       >
         All
       </Button>
       <Button
-        variant={activeFilter === "Easy" ? "default" : "outline"}
-        className={`rounded-full hover-scale ${activeFilter === "Easy" ? "bg-green-500" : ""}`}
+        variant={value === "Easy" ? "default" : "outline"}
+        className={`rounded-full hover-scale ${value === "Easy" ? "bg-green-500" : ""}`}
         onClick={() => handleFilterClick("Easy")}
       >
         Easy
       </Button>
       <Button
-        variant={activeFilter === "Medium" ? "default" : "outline"}
-        className={`rounded-full hover-scale ${activeFilter === "Medium" ? "bg-yellow-500" : ""}`}
+        variant={value === "Medium" ? "default" : "outline"}
+        className={`rounded-full hover-scale ${value === "Medium" ? "bg-yellow-500" : ""}`}
         onClick={() => handleFilterClick("Medium")}
       >
         Medium
       </Button>
       <Button
-        variant={activeFilter === "Hard" ? "default" : "outline"}
-        className={`rounded-full hover-scale ${activeFilter === "Hard" ? "bg-red-500" : ""}`}
+        variant={value === "Hard" ? "default" : "outline"}
+        className={`rounded-full hover-scale ${value === "Hard" ? "bg-red-500" : ""}`}
         onClick={() => handleFilterClick("Hard")}
       >
         Hard
