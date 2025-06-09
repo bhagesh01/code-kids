@@ -59,19 +59,19 @@ export const signupWithSupabase = async (userData: any, role: UserRole) => {
     data: {
       name: "",
       role: role,
-    }
+    } as any
   };
 
   // Update options based on role
   if (role === "student") {
     options.data.name = userData.fullName;
-    options.data.schoolName = userData.schoolName;
+    options.data.schoolName = userData.schoolName || "";
     options.data.skills = userData.skills || [];
   } else if (role === "recruiter") {
     options.data.name = userData.name;
-    options.data.phoneNumber = userData.phoneNumber;
-    options.data.linkedInProfile = userData.linkedInProfile;
-    options.data.organizationName = userData.organizationName;
+    options.data.phoneNumber = userData.phoneNumber || "";
+    options.data.linkedInProfile = userData.linkedInProfile || "";
+    options.data.organizationName = userData.organizationName || "";
   } else if (role === "admin") {
     options.data.name = userData.name;
   }

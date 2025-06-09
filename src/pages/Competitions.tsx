@@ -1,14 +1,14 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import CompetitionCard, { CompetitionData } from "@/components/CompetitionCard";
-import DifficultyFilter from "@/components/DifficultyFilter";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building, Users, Trophy } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Clock, Users, Trophy, Target, Zap, Star } from "lucide-react";
+import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import { useAuth } from "@/contexts/auth";
+import DifficultyFilter from "@/components/DifficultyFilter";
+import CompetitionCard from "@/components/CompetitionCard";
 
 const Competitions = () => {
   const navigate = useNavigate();
@@ -16,8 +16,8 @@ const Competitions = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
-  const [upcomingCompetitions, setUpcomingCompetitions] = useState<CompetitionData[]>([]);
-  const [pastCompetitions, setPastCompetitions] = useState<CompetitionData[]>([]);
+  const [upcomingCompetitions, setUpcomingCompetitions] = useState([]);
+  const [pastCompetitions, setPastCompetitions] = useState([]);
   
   useEffect(() => {
     // In a real app, this would fetch from an API endpoint

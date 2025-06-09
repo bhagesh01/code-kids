@@ -1,128 +1,101 @@
-
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth";
+import { Code, Trophy, Users, Zap, Star, Target } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { ArrowRight, Code, Star, Sparkles } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
-const Index = () => {
-  const { isAuthenticated } = useAuth();
-  
+const IndexPage = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="py-12 md:py-20">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl md:text-5xl font-bold tracking-tighter animate-fade-in">
-                  Code, Compete, and Level Up!
-                </h1>
-                <p className="text-lg md:text-xl text-muted-foreground max-w-[700px] mx-auto animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                  Join our kid-friendly coding competitions to sharpen your skills and challenge yourself against other young coders
-                </p>
+      <main className="container flex items-center justify-center flex-grow">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
+          <Card className="bg-gradient-to-br from-primary/80 to-secondary/80 text-white shadow-md hover:scale-105 transition-transform">
+            <CardContent className="flex flex-col items-start justify-between p-6 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Code className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Code Challenges</h2>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                {isAuthenticated ? (
-                  <Link to="/dashboard">
-                    <Button size="lg" className="hover-scale">
-                      Go to Dashboard
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link to="/signup">
-                    <Button size="lg" className="hover-scale">
-                      Start Coding Now
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
-                <Link to={isAuthenticated ? "/competitions" : "/login"}>
-                  <Button size="lg" variant="outline" className="hover-scale">
-                    {isAuthenticated ? "Browse Competitions" : "Login to Continue"}
-                  </Button>
-                </Link>
+              <p className="text-sm text-white/80">Sharpen your coding skills with fun challenges.</p>
+              <Button variant="secondary" onClick={() => navigate("/competitions")}>
+                Explore Challenges
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-500 to-blue-500 text-white shadow-md hover:scale-105 transition-transform">
+            <CardContent className="flex flex-col items-start justify-between p-6 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Trophy className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Compete & Win</h2>
               </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* Features Section */}
-        <section className="py-12 bg-muted/50">
-          <div className="container px-4 md:px-6">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold">How It Works</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-background p-6 rounded-lg shadow-sm hover-card">
-                <div className="mb-4 p-3 rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center">
-                  <Code className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Join Competitions</h3>
-                <p className="text-muted-foreground">
-                  Choose from weekly coding challenges based on your skill level and preferred time slot
-                </p>
+              <p className="text-sm text-white/80">Join competitions and climb the leaderboard.</p>
+              <Button variant="secondary" onClick={() => navigate("/competitions")}>
+                Join a Competition
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md hover:scale-105 transition-transform">
+            <CardContent className="flex flex-col items-start justify-between p-6 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Users className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Community</h2>
               </div>
-              <div className="bg-background p-6 rounded-lg shadow-sm hover-card">
-                <div className="mb-4 p-3 rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Improve Skills</h3>
-                <p className="text-muted-foreground">
-                  Solve fun coding problems and see how you compare with other kids your age
-                </p>
+              <p className="text-sm text-white/80">Connect with other developers and share your knowledge.</p>
+              <Button variant="secondary" onClick={() => navigate("/community")}>
+                Explore Community
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white shadow-md hover:scale-105 transition-transform">
+            <CardContent className="flex flex-col items-start justify-between p-6 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Zap className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Quick Tips</h2>
               </div>
-              <div className="bg-background p-6 rounded-lg shadow-sm hover-card">
-                <div className="mb-4 p-3 rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Track Progress</h3>
-                <p className="text-muted-foreground">
-                  Level up your profile and get weekly personalized tips to become a better coder
-                </p>
+              <p className="text-sm text-white/80">Learn new tricks and shortcuts to boost your productivity.</p>
+              <Button variant="secondary" onClick={() => navigate("/tips")}>
+                Discover Tips
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-500 to-rose-500 text-white shadow-md hover:scale-105 transition-transform">
+            <CardContent className="flex flex-col items-start justify-between p-6 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Star className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Achievements</h2>
               </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* CTA Section */}
-        <section className="py-16 bg-primary/5">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <h2 className="text-2xl md:text-3xl font-bold">Ready to Start Your Coding Journey?</h2>
-              <p className="text-muted-foreground max-w-[600px]">
-                Join thousands of young coders and start competing today. Get 5 free credits every week!
-              </p>
-              <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-                <Button size="lg" className="mt-4 hover-scale">
-                  {isAuthenticated ? "Go to Dashboard" : "Create Your Free Account"}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-      
-      {/* Footer */}
-      <footer className="border-t py-6 bg-muted/30">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="flex items-center gap-2">
-              <Code className="h-6 w-6 text-primary" />
-              <span className="font-semibold">CodeKids</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} CodeKids. All rights reserved.
-            </p>
-          </div>
+              <p className="text-sm text-white/80">Track your progress and unlock achievements.</p>
+              <Button variant="secondary" onClick={() => navigate("/achievements")}>
+                View Achievements
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white shadow-md hover:scale-105 transition-transform">
+            <CardContent className="flex flex-col items-start justify-between p-6 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Target className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Practice Arena</h2>
+              </div>
+              <p className="text-sm text-white/80">Hone your skills in a practice environment.</p>
+              <Button variant="secondary" onClick={() => navigate("/practice")}>
+                Enter Arena
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </footer>
+      </main>
     </div>
   );
 };
 
-export default Index;
+export default IndexPage;

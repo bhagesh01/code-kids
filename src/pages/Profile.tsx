@@ -1,18 +1,14 @@
-
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { useAuth } from "@/contexts/auth";
 import Navbar from "@/components/Navbar";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
-import { HistoryItem } from "@/components/CompetitionHistory";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const Profile = () => {
   const { user } = useAuth();
-  const [competitionHistory, setCompetitionHistory] = useState<HistoryItem[]>([]);
-  const [userStats, setUserStats] = useState<any>({});
-  const [achievements, setAchievements] = useState<any[]>([]);
+  const [competitionHistory, setCompetitionHistory] = useState([]);
+  const [userStats, setUserStats] = useState({});
+  const [achievements, setAchievements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Fetch user data from Supabase
@@ -48,7 +44,7 @@ const Profile = () => {
         if (achievementsError) throw achievementsError;
         
         // Transform data for the UI
-        const historyItems: HistoryItem[] = participations?.map((item: any) => ({
+        const historyItems = participations?.map((item: any) => ({
           id: item.id,
           date: new Date(item.created_at).toISOString().split('T')[0],
           competition: item.competition?.name || "Unknown Competition",
