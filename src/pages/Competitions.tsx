@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Users, Clock, Trophy, Calendar } from "lucide-react";
+import { Search, Plus, Users, Clock, Trophy, Calendar, Code } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import CompetitionCard from "@/components/CompetitionCard";
 import DifficultyFilter from "@/components/DifficultyFilter";
@@ -25,13 +24,13 @@ interface CompetitionData {
   positions?: number;
 }
 
-type DifficultyFilter = "All" | "Easy" | "Medium" | "Hard";
+type DifficultyFilterType = "All" | "Easy" | "Medium" | "Hard";
 
 const Competitions = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>("All");
+  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilterType>("All");
   const [competitions, setCompetitions] = useState<CompetitionData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -392,7 +391,6 @@ const Competitions = () => {
                 <CompetitionCard
                   key={competition.id}
                   competition={competition}
-                  onJoin={() => navigate(`/competitions/${competition.id}`)}
                 />
               ))}
             </div>
@@ -420,7 +418,6 @@ const Competitions = () => {
                 <CompetitionCard
                   key={competition.id}
                   competition={competition}
-                  onJoin={() => navigate(`/competitions/${competition.id}`)}
                 />
               ))}
             </div>
@@ -441,7 +438,6 @@ const Competitions = () => {
                 <CompetitionCard
                   key={competition.id}
                   competition={competition}
-                  onJoin={() => navigate(`/competitions/${competition.id}`)}
                 />
               ))}
             </div>
