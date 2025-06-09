@@ -272,8 +272,10 @@ const Dashboard = () => {
           {/* Right Column - Tips & Info */}
           <div className="space-y-6">
             <WeeklyTip 
-              title="Pro Tip of the Week" 
-              description="Use console.log() statements to debug your code during competitions. They can help you trace through your logic and catch edge cases!"
+              tip={{
+                title: "Pro Tip of the Week",
+                description: "Use console.log() statements to debug your code during competitions. They can help you trace through your logic and catch edge cases!"
+              }}
             />
 
             {/* Quick Actions */}
