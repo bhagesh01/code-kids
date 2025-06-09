@@ -44,7 +44,12 @@ function findLargest(arr) {
   // Your code here
   let largest = arr[0];
   
-  // Implement your solution
+  // Loop through the array to find the largest number
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > largest) {
+      largest = arr[i];
+    }
+  }
   
   return largest;
 }
@@ -189,29 +194,48 @@ function findLargest(arr) {
     if (value !== undefined) {
       setCode(value);
       
-      // Update player's progress in leaderboard
+      // Update player's progress in leaderboard based on code completeness
       const codeLength = value.trim().length;
-      const progress = Math.min(90, Math.floor((codeLength / 150) * 100)); // Arbitrary progress calculation
+      const hasFunction = value.includes('function findLargest');
+      const hasLoop = value.includes('for') || value.includes('while');
+      const hasReturn = value.includes('return');
+      
+      let progress = 0;
+      if (hasFunction) progress += 30;
+      if (hasLoop) progress += 30;
+      if (hasReturn) progress += 20;
+      if (codeLength > 100) progress += 20;
       
       setLeaderboard(prev => 
         prev.map(player => 
-          player.name === (user?.name || "You") ? { ...player, progress } : player
+          player.name === (user?.name || "You") ? { ...player, progress: Math.min(90, progress) } : player
         )
       );
     }
   };
   
+  // Handle test code
+  const handleTestCode = () => {
+    console.log("Running tests...");
+    testCode();
+  };
+  
   // Handle code submission
   const handleSubmit = () => {
-    // First test the code
-    const results = testCode();
+    console.log("Submitting code...");
     
-    // Check if all tests have passed
-    if (!results.every(r => r.passed)) {
-      toast.error("Cannot submit. Please fix the failing tests first.");
-      return;
+    // First test the code if not already tested or if tests failed
+    if (testResults.length === 0 || !allTestsPassed) {
+      const results = testCode();
+      
+      // Check if all tests have passed
+      if (!results.every(r => r.passed)) {
+        toast.error("Cannot submit: Some tests are failing. Please fix your code and try again.");
+        return;
+      }
     }
     
+    // If we reach here, all tests passed
     setIsCompleted(true);
     setShowConfetti(true);
     
@@ -223,7 +247,7 @@ function findLargest(arr) {
       return updated.sort((a, b) => b.progress - a.progress);
     });
     
-    toast.success("Solution submitted successfully!");
+    toast.success("🎉 Solution submitted successfully! All tests passed!");
   };
   
   // Handle competition start from lobby
@@ -270,13 +294,13 @@ function findLargest(arr) {
             )}
             {!isCompleted && (
               <div className="flex space-x-2">
-                <Button onClick={testCode} variant="outline" className="hover-scale">
+                <Button onClick={handleTestCode} variant="outline" className="hover-scale">
                   Test Code
                 </Button>
                 <Button 
                   onClick={handleSubmit} 
                   className="hover-scale"
-                  disabled={!allTestsPassed}
+                  disabled={testResults.length > 0 && !allTestsPassed}
                 >
                   Submit Code
                 </Button>
