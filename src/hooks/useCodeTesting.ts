@@ -15,7 +15,12 @@ interface TestCase {
   description?: string;
 }
 
-const useCodeTesting = (code: string) => {
+interface CompetitionData {
+  functionName: string;
+  tests: Array<{ input: string; expected: string }>;
+}
+
+const useCodeTesting = (code: string, competitionData: CompetitionData | null) => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [allTestsPassed, setAllTestsPassed] = useState(false);
   const [showTestDialog, setShowTestDialog] = useState(false);
@@ -23,39 +28,66 @@ const useCodeTesting = (code: string) => {
   const testCode = () => {
     console.log("Testing code:", code);
     
+    if (!competitionData) {
+      console.error("No competition data available");
+      return [];
+    }
+    
     try {
-      // Define test cases for the findLargest function
-      const testCases: TestCase[] = [
-        { input: [5, 2, 9, 1, 7], expected: 9, description: "Mixed positive numbers" },
-        { input: [10, 10, 10], expected: 10, description: "All same numbers" },
-        { input: [-5, -10, -1, -3], expected: -1, description: "All negative numbers" },
-        { input: [1], expected: 1, description: "Single element" },
-        { input: [100, 50, 75], expected: 100, description: "First element is largest" }
-      ];
+      // Convert competition test cases to our internal format
+      const testCases: TestCase[] = competitionData.tests.map((test, index) => {
+        // Parse the input string to get the actual parameters
+        let parsedInput: any[];
+        try {
+          // Handle different input formats
+          if (competitionData.functionName === 'binarySearch') {
+            // For binary search: "[1, 3, 5, 7, 9], 5"
+            const parts = test.input.split('], ');
+            const arrayPart = parts[0] + ']';
+            const targetPart = parts[1];
+            const array = JSON.parse(arrayPart);
+            const target = parseInt(targetPart);
+            parsedInput = [array, target];
+          } else if (competitionData.functionName === 'fibonacci') {
+            // For fibonacci: "6"
+            parsedInput = [parseInt(test.input)];
+          } else {
+            // For findLargest and other array functions: "[5, 2, 9, 1, 7]"
+            parsedInput = [JSON.parse(test.input)];
+          }
+        } catch (e) {
+          console.error("Error parsing input:", test.input, e);
+          parsedInput = [test.input];
+        }
+
+        return {
+          input: parsedInput,
+          expected: isNaN(Number(test.expected)) ? test.expected : Number(test.expected),
+          description: `Test case ${index + 1}`
+        };
+      });
       
-      // Create a safe evaluation environment
       const results: TestResult[] = [];
       
       // Extract the function from the code
       let userFunction: Function | null = null;
       
       try {
-        // Create a more robust sandbox environment to execute the user's code
-        // First check if the code contains a findLargest function
-        if (!code.includes('findLargest')) {
-          throw new Error('findLargest function not found in the code');
+        // Check if the code contains the required function
+        if (!code.includes(competitionData.functionName)) {
+          throw new Error(`${competitionData.functionName} function not found in the code`);
         }
         
-        // Create a safe execution environment
+        // Create a more robust sandbox environment to execute the user's code
         const functionCode = `
           // User's code
           ${code}
           
           // Return the function for testing
-          if (typeof findLargest === 'function') {
-            return findLargest;
+          if (typeof ${competitionData.functionName} === 'function') {
+            return ${competitionData.functionName};
           } else {
-            throw new Error('findLargest function not found or not properly defined');
+            throw new Error('${competitionData.functionName} function not found or not properly defined');
           }
         `;
         
@@ -64,7 +96,7 @@ const useCodeTesting = (code: string) => {
         userFunction = createUserFunction();
         
         if (typeof userFunction !== 'function') {
-          throw new Error('findLargest function not found or not properly defined');
+          throw new Error(`${competitionData.functionName} function not found or not properly defined`);
         }
         
         console.log("Successfully compiled user function");
@@ -93,7 +125,7 @@ const useCodeTesting = (code: string) => {
         try {
           console.log(`Running test ${index + 1}:`, testCase);
           
-          const result = userFunction!(testCase.input);
+          const result = userFunction!(...testCase.input);
           const passed = result === testCase.expected;
           
           console.log(`Test ${index + 1} result:`, { 
@@ -105,7 +137,7 @@ const useCodeTesting = (code: string) => {
           
           results.push({
             passed,
-            input: JSON.stringify(testCase.input),
+            input: competitionData.tests[index].input,
             expected: testCase.expected.toString(),
             actual: result?.toString() || 'undefined'
           });
@@ -114,7 +146,7 @@ const useCodeTesting = (code: string) => {
           console.error(`Error in test ${index + 1}:`, error);
           results.push({
             passed: false,
-            input: JSON.stringify(testCase.input),
+            input: competitionData.tests[index].input,
             expected: testCase.expected.toString(),
             error: `Runtime error: ${error.message}`
           });

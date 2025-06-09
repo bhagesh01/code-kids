@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,21 @@ import HintSystem from "@/components/competition/HintSystem";
 import useCompetitionTimer from "@/hooks/useCompetitionTimer";
 import useCodeTesting from "@/hooks/useCodeTesting";
 
+interface CompetitionData {
+  id: string;
+  title: string;
+  difficulty: string;
+  description: string;
+  startTime: Date;
+  duration: number;
+  category: string;
+  problem: string;
+  tests: Array<{ input: string; expected: string }>;
+  hints: Array<{ text: string; penalty: number }>;
+  codeTemplate: string;
+  functionName: string;
+}
+
 const CompetitionRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,6 +45,8 @@ const CompetitionRoom = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [inLobby, setInLobby] = useState(true);
   const [isArenaCompetition, setIsArenaCompetition] = useState(false);
+  const [competitionData, setCompetitionData] = useState<CompetitionData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState([
     { name: "Alice", progress: 85 },
     { name: "Bob", progress: 72 },
@@ -38,9 +54,59 @@ const CompetitionRoom = () => {
     { name: "Charlie", progress: 45 },
     { name: "Diana", progress: 38 }
   ]);
-  
-  // Default code template
-  const codeTemplate = `// Write a function to find the largest number in an array
+
+  // Mock competition data based on ID
+  const getCompetitionData = (competitionId: string): CompetitionData => {
+    const competitions: Record<string, CompetitionData> = {
+      "mock-1": {
+        id: "mock-1",
+        title: "Array Adventures",
+        difficulty: "Easy",
+        description: "Write a function that finds the largest element in an array of numbers.",
+        startTime: new Date(Date.now() + 60000),
+        duration: 10,
+        category: "arena",
+        functionName: "findLargest",
+        problem: `
+# Find the Largest Number
+
+Write a function called \`findLargest\` that takes an array of numbers as input and returns the largest number in the array.
+
+## Examples:
+- Input: [5, 2, 9, 1, 7]
+- Output: 9
+
+- Input: [10, 10, 10]
+- Output: 10
+
+- Input: [-5, -10, -1, -3]
+- Output: -1
+
+## Notes:
+- The array will have at least one element
+- You can assume all elements are numbers
+- Don't use built-in Math.max() function (challenge yourself!)
+        `,
+        tests: [
+          { input: "[5, 2, 9, 1, 7]", expected: "9" },
+          { input: "[10, 10, 10]", expected: "10" },
+          { input: "[-5, -10, -1, -3]", expected: "-1" },
+        ],
+        hints: [
+          { 
+            text: "Start by assuming the first element is the largest, then loop through the array to find any larger numbers.", 
+            penalty: 15 
+          },
+          { 
+            text: "Use a for loop to iterate through the array, comparing each element with your current 'largest' value.", 
+            penalty: 30 
+          },
+          { 
+            text: "If you find a number larger than your current 'largest', update the 'largest' variable with that new number.", 
+            penalty: 45 
+          },
+        ],
+        codeTemplate: `// Write a function to find the largest number in an array
 // DO NOT use built-in Math.max() function
 
 function findLargest(arr) {
@@ -59,69 +125,175 @@ function findLargest(arr) {
 
 // Example usage:
 // findLargest([5, 2, 9, 1, 7]) should return 9
-`;
+`
+      },
+      "binary-search": {
+        id: "binary-search",
+        title: "Binary Search Challenge",
+        difficulty: "Medium",
+        description: "Implement binary search to find an element in a sorted array.",
+        startTime: new Date(Date.now() + 60000),
+        duration: 15,
+        category: "arena",
+        functionName: "binarySearch",
+        problem: `
+# Binary Search Implementation
+
+Write a function called \`binarySearch\` that takes a sorted array and a target value, then returns the index of the target if found, or -1 if not found.
+
+## Examples:
+- Input: [1, 3, 5, 7, 9], target: 5
+- Output: 2
+
+- Input: [1, 3, 5, 7, 9], target: 6
+- Output: -1
+
+- Input: [2, 4, 6, 8, 10, 12], target: 10
+- Output: 4
+
+## Notes:
+- The input array is always sorted in ascending order
+- Use the binary search algorithm (divide and conquer)
+- Time complexity should be O(log n)
+        `,
+        tests: [
+          { input: "[1, 3, 5, 7, 9], 5", expected: "2" },
+          { input: "[1, 3, 5, 7, 9], 6", expected: "-1" },
+          { input: "[2, 4, 6, 8, 10, 12], 10", expected: "4" },
+          { input: "[1], 1", expected: "0" },
+        ],
+        hints: [
+          { 
+            text: "Start with two pointers: left (0) and right (array.length - 1). Calculate the middle index.", 
+            penalty: 20 
+          },
+          { 
+            text: "Compare the middle element with the target. If equal, return the index. If target is smaller, search the left half.", 
+            penalty: 35 
+          },
+          { 
+            text: "If target is larger than middle element, search the right half by updating the left pointer.", 
+            penalty: 50 
+          },
+        ],
+        codeTemplate: `// Implement binary search algorithm
+// Time complexity should be O(log n)
+
+function binarySearch(arr, target) {
+  // Your code here
+  let left = 0;
+  let right = arr.length - 1;
   
-  // Mock competition data
-  const competitionData = {
-    title: "Array Adventures",
-    difficulty: "Easy",
-    description: "Write a function that finds the largest element in an array of numbers.",
-    startTime: new Date(Date.now() + 60000), // Mock start time 1 minute from now
-    duration: 10, // in minutes
-    category: "arena", // Set to arena for testing
-    problem: `
-      # Find the Largest Number
+  while (left <= right) {
+    let mid = Math.floor((left + right) / 2);
+    
+    if (arr[mid] === target) {
+      return mid;
+    } else if (arr[mid] < target) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+  
+  return -1;
+}
 
-      Write a function called \`findLargest\` that takes an array of numbers as input and returns the largest number in the array.
-
-      ## Examples:
-      - Input: [5, 2, 9, 1, 7]
-      - Output: 9
-
-      - Input: [10, 10, 10]
-      - Output: 10
-
-      - Input: [-5, -10, -1, -3]
-      - Output: -1
-
-      ## Notes:
-      - The array will have at least one element
-      - You can assume all elements are numbers
-      - Don't use built-in Math.max() function (challenge yourself!)
-    `,
-    tests: [
-      { input: "[5, 2, 9, 1, 7]", expected: "9" },
-      { input: "[10, 10, 10]", expected: "10" },
-      { input: "[-5, -10, -1, -3]", expected: "-1" },
-    ],
-    hints: [
-      { 
-        text: "Start by assuming the first element is the largest, then loop through the array to find any larger numbers.", 
-        penalty: 15 
+// Example usage:
+// binarySearch([1, 3, 5, 7, 9], 5) should return 2
+`
       },
-      { 
-        text: "Use a for loop to iterate through the array, comparing each element with your current 'largest' value.", 
-        penalty: 30 
-      },
-      { 
-        text: "If you find a number larger than your current 'largest', update the 'largest' variable with that new number.", 
-        penalty: 45 
-      },
-    ],
+      "fibonacci": {
+        id: "fibonacci",
+        title: "Fibonacci Sequence",
+        difficulty: "Easy",
+        description: "Generate the nth Fibonacci number efficiently.",
+        startTime: new Date(Date.now() + 60000),
+        duration: 12,
+        category: "arena",
+        functionName: "fibonacci",
+        problem: `
+# Fibonacci Number
+
+Write a function called \`fibonacci\` that takes a number n and returns the nth Fibonacci number.
+
+## Examples:
+- Input: 0
+- Output: 0
+
+- Input: 1
+- Output: 1
+
+- Input: 6
+- Output: 8
+
+- Input: 10
+- Output: 55
+
+## Notes:
+- The Fibonacci sequence starts: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55...
+- fibonacci(0) = 0, fibonacci(1) = 1
+- For n > 1: fibonacci(n) = fibonacci(n-1) + fibonacci(n-2)
+        `,
+        tests: [
+          { input: "0", expected: "0" },
+          { input: "1", expected: "1" },
+          { input: "6", expected: "8" },
+          { input: "10", expected: "55" },
+        ],
+        hints: [
+          { 
+            text: "You can solve this iteratively instead of recursively for better performance.", 
+            penalty: 10 
+          },
+          { 
+            text: "Keep track of the previous two numbers and update them as you calculate each new Fibonacci number.", 
+            penalty: 25 
+          },
+          { 
+            text: "Use two variables (prev and curr) and update them in a loop from 2 to n.", 
+            penalty: 40 
+          },
+        ],
+        codeTemplate: `// Generate the nth Fibonacci number
+// Try to implement it efficiently (avoid recursion for better performance)
+
+function fibonacci(n) {
+  // Your code here
+  if (n <= 1) return n;
+  
+  let prev = 0;
+  let curr = 1;
+  
+  for (let i = 2; i <= n; i++) {
+    let next = prev + curr;
+    prev = curr;
+    curr = next;
+  }
+  
+  return curr;
+}
+
+// Example usage:
+// fibonacci(6) should return 8
+`
+      }
+    };
+
+    return competitions[competitionId] || competitions["mock-1"];
   };
 
-  // Use custom hooks for code testing
+  // Use custom hooks for code testing - pass competition data
   const { 
     testResults, 
     allTestsPassed, 
     showTestDialog, 
     setShowTestDialog, 
     testCode 
-  } = useCodeTesting(code);
+  } = useCodeTesting(code, competitionData);
 
   // Handle hint usage
   const handleHintUsed = (penalty: number) => {
-    // Add penalty to the timer by reducing timeLeft
     setTimeLeft((current) => {
       if (current === null) return null;
       return Math.max(0, current - penalty);
@@ -135,40 +307,48 @@ function findLargest(arr) {
 
   // Use custom timer hook with timeLeft setter exposed
   const { timeLeft, setTimeLeft, formatTime } = useCompetitionTimer(
-    competitionData.duration * 60, 
+    competitionData?.duration ? competitionData.duration * 60 : 600, 
     handleCompetitionComplete
   );
 
-  // Initialize code with template
-  useEffect(() => {
-    if (!code) {
-      setCode(codeTemplate);
-    }
-  }, []);
-
   // Fetch competition data
   useEffect(() => {
-    // Mock fetching competition data
     const fetchCompetitionData = async () => {
-      // Check if this is an arena competition (practice mode)
-      setIsArenaCompetition(competitionData.category === "arena");
+      setLoading(true);
       
-      if (competitionData.category === "arena") {
-        // Arena competitions are available immediately for practice
-        setInLobby(false);
-        setTimeLeft(competitionData.duration * 60); // Convert minutes to seconds
-      } else {
-        // For timed competitions, check if we need to show lobby
-        const now = new Date();
+      try {
+        // Get competition data based on ID
+        const data = getCompetitionData(id || "mock-1");
+        setCompetitionData(data);
         
-        if (now < competitionData.startTime) {
-          // Competition hasn't started yet - show lobby with notify option
-          setInLobby(true);
-        } else {
-          // Competition has started - show timer
-          setInLobby(false);
-          setTimeLeft(competitionData.duration * 60); // Convert minutes to seconds
+        // Initialize code with template
+        if (!code) {
+          setCode(data.codeTemplate);
         }
+        
+        // Check if this is an arena competition (practice mode)
+        setIsArenaCompetition(data.category === "arena");
+        
+        if (data.category === "arena") {
+          // Arena competitions are available immediately for practice
+          setInLobby(false);
+          setTimeLeft(data.duration * 60);
+        } else {
+          // For timed competitions, check if we need to show lobby
+          const now = new Date();
+          
+          if (now < data.startTime) {
+            setInLobby(true);
+          } else {
+            setInLobby(false);
+            setTimeLeft(data.duration * 60);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching competition data:", error);
+        toast.error("Failed to load competition data");
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -199,7 +379,7 @@ function findLargest(arr) {
       
       // Update player's progress in leaderboard based on code completeness
       const codeLength = value.trim().length;
-      const hasFunction = value.includes('function findLargest');
+      const hasFunction = competitionData && value.includes(`function ${competitionData.functionName}`);
       const hasLoop = value.includes('for') || value.includes('while');
       const hasReturn = value.includes('return');
       
@@ -221,13 +401,18 @@ function findLargest(arr) {
   const handleTestCode = () => {
     console.log("Running tests...");
     
+    if (!competitionData) {
+      toast.error("Competition data not loaded!");
+      return;
+    }
+    
     if (!code.trim()) {
       toast.error("Please write some code before testing!");
       return;
     }
     
-    if (!code.includes('findLargest')) {
-      toast.error("Please define the 'findLargest' function!");
+    if (!code.includes(competitionData.functionName)) {
+      toast.error(`Please define the '${competitionData.functionName}' function!`);
       return;
     }
     
@@ -238,13 +423,18 @@ function findLargest(arr) {
   const handleSubmit = () => {
     console.log("Submitting code...");
     
+    if (!competitionData) {
+      toast.error("Competition data not loaded!");
+      return;
+    }
+    
     if (!code.trim()) {
       toast.error("Please write some code before submitting!");
       return;
     }
     
-    if (!code.includes('findLargest')) {
-      toast.error("Please define the 'findLargest' function!");
+    if (!code.includes(competitionData.functionName)) {
+      toast.error(`Please define the '${competitionData.functionName}' function!`);
       return;
     }
     
@@ -286,6 +476,15 @@ function findLargest(arr) {
     setInLobby(false);
     setTimeLeft(duration);
   };
+  
+  // Show loading state
+  if (loading || !competitionData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading competition...</div>
+      </div>
+    );
+  }
   
   // Render the lobby screen when waiting for competition to start
   if (inLobby) {
