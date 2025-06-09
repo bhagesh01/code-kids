@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Target, Clock, TrendingUp, Calendar, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import CompetitionHistory from "@/components/CompetitionHistory";
+import CompetitionHistory, { HistoryItem } from "@/components/CompetitionHistory";
 import WeeklyTip from "@/components/WeeklyTip";
 
 const Dashboard = () => {
@@ -38,9 +38,39 @@ const Dashboard = () => {
 
   const weeklyTip = {
     title: "Master Two Pointers Technique",
-    content: "The two pointers technique is essential for array problems. Practice with problems like 'Two Sum' and 'Container With Most Water' to build your intuition.",
-    category: "Algorithm Pattern"
+    description: "The two pointers technique is essential for array problems. Practice with problems like 'Two Sum' and 'Container With Most Water' to build your intuition."
   };
+
+  // Mock competition history data
+  const competitionHistory: HistoryItem[] = [
+    {
+      id: "1",
+      date: "2024-01-15",
+      competition: "Weekly Algorithm Challenge #42",
+      difficulty: "Medium" as const,
+      rank: 23,
+      participants: 156,
+      score: 850
+    },
+    {
+      id: "2", 
+      date: "2024-01-08",
+      competition: "Data Structures Mastery",
+      difficulty: "Hard" as const,
+      rank: 45,
+      participants: 89,
+      score: 720
+    },
+    {
+      id: "3",
+      date: "2024-01-01",
+      competition: "New Year Coding Sprint",
+      difficulty: "Easy" as const,
+      rank: 12,
+      participants: 203,
+      score: 950
+    }
+  ];
 
   // Mock stats
   const stats = {
@@ -193,7 +223,7 @@ const Dashboard = () => {
 
         {/* Competition History */}
         <div className="mt-8">
-          <CompetitionHistory />
+          <CompetitionHistory history={competitionHistory} />
         </div>
       </main>
     </div>
