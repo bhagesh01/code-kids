@@ -1,5 +1,8 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
@@ -7,7 +10,13 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 const Profile = () => {
   const { user } = useAuth();
   const [competitionHistory, setCompetitionHistory] = useState([]);
-  const [userStats, setUserStats] = useState({});
+  const [userStats, setUserStats] = useState({
+    totalCompetitions: 0,
+    wins: 0,
+    averageRank: "N/A",
+    favoriteCategory: "Arrays",
+    topLanguage: "JavaScript"
+  });
   const [achievements, setAchievements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
