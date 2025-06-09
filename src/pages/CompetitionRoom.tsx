@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -21,19 +21,8 @@ import useCodeTesting from "@/hooks/useCodeTesting";
 
 const CompetitionRoom = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const [code, setCode] = useState("");
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<{name: string, progress: number}[]>([
-    { name: "Player 1", progress: 75 },
-    { name: "Player 2", progress: 60 },
-    { name: "Player 3", progress: 40 },
-    { name: user?.name || "You", progress: 25 },
-    { name: "Player 4", progress: 15 },
-  ]);
-  const [inLobby, setInLobby] = useState(false);
-  const [isArenaCompetition, setIsArenaCompetition] = useState(false);
   
   // Default code template
   const codeTemplate = `// Write a function to find the largest number in an array
@@ -270,6 +259,11 @@ function findLargest(arr) {
     });
     
     toast.success("🎉 Solution submitted successfully! All tests passed!");
+    
+    // Redirect to competitions page after a short delay
+    setTimeout(() => {
+      navigate("/competitions");
+    }, 3000);
   };
   
   // Handle competition start from lobby
