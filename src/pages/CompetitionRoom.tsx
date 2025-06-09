@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -217,6 +216,17 @@ function findLargest(arr) {
   // Handle test code
   const handleTestCode = () => {
     console.log("Running tests...");
+    
+    if (!code.trim()) {
+      toast.error("Please write some code before testing!");
+      return;
+    }
+    
+    if (!code.includes('findLargest')) {
+      toast.error("Please define the 'findLargest' function!");
+      return;
+    }
+    
     testCode();
   };
   
@@ -224,8 +234,19 @@ function findLargest(arr) {
   const handleSubmit = () => {
     console.log("Submitting code...");
     
+    if (!code.trim()) {
+      toast.error("Please write some code before submitting!");
+      return;
+    }
+    
+    if (!code.includes('findLargest')) {
+      toast.error("Please define the 'findLargest' function!");
+      return;
+    }
+    
     // First test the code if not already tested or if tests failed
     if (testResults.length === 0 || !allTestsPassed) {
+      console.log("Running tests before submission...");
       const results = testCode();
       
       // Check if all tests have passed
@@ -236,6 +257,7 @@ function findLargest(arr) {
     }
     
     // If we reach here, all tests passed
+    console.log("All tests passed! Submitting solution...");
     setIsCompleted(true);
     setShowConfetti(true);
     

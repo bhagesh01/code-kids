@@ -40,24 +40,34 @@ const useCodeTesting = (code: string) => {
       let userFunction: Function | null = null;
       
       try {
-        // Create a sandbox environment to execute the user's code
-        const sandboxCode = `
+        // Create a more robust sandbox environment to execute the user's code
+        // First check if the code contains a findLargest function
+        if (!code.includes('findLargest')) {
+          throw new Error('findLargest function not found in the code');
+        }
+        
+        // Create a safe execution environment
+        const functionCode = `
+          // User's code
           ${code}
           
           // Return the function for testing
           if (typeof findLargest === 'function') {
-            findLargest;
+            return findLargest;
           } else {
             throw new Error('findLargest function not found or not properly defined');
           }
         `;
         
-        // Use Function constructor to evaluate the code safely
-        userFunction = new Function('return (' + sandboxCode + ')')();
+        // Use Function constructor to evaluate the code safely in a controlled scope
+        const createUserFunction = new Function(functionCode);
+        userFunction = createUserFunction();
         
         if (typeof userFunction !== 'function') {
           throw new Error('findLargest function not found or not properly defined');
         }
+        
+        console.log("Successfully compiled user function");
         
       } catch (error: any) {
         console.error("Error compiling user code:", error);
@@ -86,7 +96,12 @@ const useCodeTesting = (code: string) => {
           const result = userFunction!(testCase.input);
           const passed = result === testCase.expected;
           
-          console.log(`Test ${index + 1} result:`, { result, expected: testCase.expected, passed });
+          console.log(`Test ${index + 1} result:`, { 
+            input: testCase.input,
+            result, 
+            expected: testCase.expected, 
+            passed 
+          });
           
           results.push({
             passed,
@@ -101,7 +116,7 @@ const useCodeTesting = (code: string) => {
             passed: false,
             input: JSON.stringify(testCase.input),
             expected: testCase.expected.toString(),
-            error: error.message
+            error: `Runtime error: ${error.message}`
           });
         }
       });
@@ -113,6 +128,8 @@ const useCodeTesting = (code: string) => {
       // Check if all tests passed
       const allPassed = results.every(r => r.passed);
       setAllTestsPassed(allPassed);
+      
+      console.log("All tests passed:", allPassed);
       
       // Show the test results dialog
       setShowTestDialog(true);
