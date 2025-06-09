@@ -25,6 +25,10 @@ interface ProblemDescriptionProps {
 }
 
 const ProblemDescription = ({ title, description, problem, tests, testResults }: ProblemDescriptionProps) => {
+  // Ensure arrays are defined
+  const safeTests = tests || [];
+  const safeTestResults = testResults || [];
+
   return (
     <Card className="h-full overflow-hidden">
       <Tabs defaultValue="problem">
@@ -44,14 +48,14 @@ const ProblemDescription = ({ title, description, problem, tests, testResults }:
           </TabsContent>
           <TabsContent value="tests" className="m-0 space-y-4">
             <h2 className="text-lg font-semibold mb-2">Test Cases</h2>
-            {tests.map((test, index) => (
+            {safeTests.map((test, index) => (
               <div key={index} className="border rounded-md p-3">
                 <div className="text-sm"><span className="font-medium">Input:</span> {test.input}</div>
                 <div className="text-sm"><span className="font-medium">Expected:</span> {test.expected}</div>
-                {testResults[index] && (
+                {safeTestResults[index] && (
                   <div className="mt-2">
-                    <Badge variant={testResults[index].passed ? "default" : "destructive"}>
-                      {testResults[index].passed ? "Passed" : "Failed"}
+                    <Badge variant={safeTestResults[index].passed ? "default" : "destructive"}>
+                      {safeTestResults[index].passed ? "Passed" : "Failed"}
                     </Badge>
                   </div>
                 )}

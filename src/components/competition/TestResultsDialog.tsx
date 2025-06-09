@@ -25,6 +25,9 @@ const TestResultsDialog = ({
   testResults, 
   allTestsPassed 
 }: TestResultsDialogProps) => {
+  // Ensure testResults is defined
+  const safeTestResults = testResults || [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -32,7 +35,7 @@ const TestResultsDialog = ({
           <DialogTitle>Test Results</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {testResults.map((result, index) => (
+          {safeTestResults.map((result, index) => (
             <div key={index} className={`p-3 rounded-md border ${result.passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="font-medium">Test Case #{index + 1}</div>
