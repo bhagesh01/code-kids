@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,20 @@ const CompetitionRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // State variables
+  const [code, setCode] = useState<string>("");
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [inLobby, setInLobby] = useState(true);
+  const [isArenaCompetition, setIsArenaCompetition] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([
+    { name: "Alice", progress: 85 },
+    { name: "Bob", progress: 72 },
+    { name: user?.name || "You", progress: 0 },
+    { name: "Charlie", progress: 45 },
+    { name: "Diana", progress: 38 }
+  ]);
   
   // Default code template
   const codeTemplate = `// Write a function to find the largest number in an array
