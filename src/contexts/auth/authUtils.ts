@@ -5,7 +5,7 @@ import { User, UserRole, MOCK_USERS } from "./types";
 
 export const authenticateWithSupabase = async (email: string, password: string) => {
   console.log("Attempting login with:", email);
-  // Try to login with Supabase
+  
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -13,19 +13,44 @@ export const authenticateWithSupabase = async (email: string, password: string) 
 
   if (error) {
     console.error("Supabase login error:", error);
-    // Check if error is due to email not confirmed
     if (error.message.includes("Email not confirmed")) {
       toast.error("Please confirm your email before logging in.");
       throw new Error("Please confirm your email before logging in.");
     }
-    return { error };
-  } else if (data.user) {
+    if (error.message.includes("Invalid login credentials")) {
+      toast.error("Invalid email or password");
+      throw new Error("Invalid email or password");
+    }
+    throw new Error(error.message);
+  }
+
+  if (data.user) {
+    // Fetch the user's profile from our profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      // Fallback to user metadata if profile doesn't exist
+      const userData = {
+        id: data.user.id,
+        email: data.user.email as string,
+        name: data.user.user_metadata.name || data.user.email?.split('@')[0] || "",
+        role: data.user.user_metadata.role as UserRole || "student",
+        profileImage: data.user.user_metadata.profileImage,
+      };
+      return { userData, error: null };
+    }
+
     const userData = {
-      id: data.user.id,
+      id: profile.id,
       email: data.user.email as string,
-      name: data.user.user_metadata.name || data.user.email?.split('@')[0] || "",
-      role: data.user.user_metadata.role as UserRole || "student",
-      profileImage: data.user.user_metadata.profileImage,
+      name: profile.name,
+      role: profile.role as UserRole,
+      profileImage: profile.profile_image,
     };
     
     return { userData, error: null };
@@ -54,8 +79,11 @@ export const authenticateWithMockData = (email: string, password: string) => {
 };
 
 export const signupWithSupabase = async (userData: any, role: UserRole) => {
+  const redirectUrl = `${window.location.origin}/dashboard`;
+  
   // Common signup options for metadata
   let options = {
+    emailRedirectTo: redirectUrl,
     data: {
       name: "",
       role: role,

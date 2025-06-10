@@ -39,7 +39,9 @@ const Profile = () => {
           .order('created_at', { ascending: false })
           .limit(10);
           
-        if (participationsError) throw participationsError;
+        if (participationsError && participationsError.code !== 'PGRST116') {
+          console.error("Error fetching participations:", participationsError);
+        }
         
         // Fetch user's achievements
         const { data: userAchievements, error: achievementsError } = await supabase
@@ -50,7 +52,9 @@ const Profile = () => {
           `)
           .eq('user_id', user.id);
           
-        if (achievementsError) throw achievementsError;
+        if (achievementsError && achievementsError.code !== 'PGRST116') {
+          console.error("Error fetching achievements:", achievementsError);
+        }
         
         // Transform data for the UI
         const historyItems = participations?.map((item: any) => ({

@@ -21,19 +21,47 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log("Auth state change event:", event);
-        if (session) {
-          const userData = {
-            id: session.user.id,
-            email: session.user.email as string,
-            name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "",
-            role: session.user.user_metadata.role as UserRole || "student",
-            profileImage: session.user.user_metadata.profileImage,
-          };
-          console.log("Setting user from session:", userData);
-          setUser(userData);
-          localStorage.setItem("codekids_user", JSON.stringify(userData));
+        
+        if (session?.user) {
+          // Fetch user profile from profiles table
+          setTimeout(async () => {
+            try {
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+              if (error) {
+                console.error("Error fetching profile:", error);
+                // Fallback to session user metadata
+                const userData = {
+                  id: session.user.id,
+                  email: session.user.email as string,
+                  name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "",
+                  role: session.user.user_metadata.role as UserRole || "student",
+                  profileImage: session.user.user_metadata.profileImage,
+                };
+                setUser(userData);
+                localStorage.setItem("codekids_user", JSON.stringify(userData));
+              } else {
+                const userData = {
+                  id: profile.id,
+                  email: session.user.email as string,
+                  name: profile.name,
+                  role: profile.role as UserRole,
+                  profileImage: profile.profile_image,
+                };
+                console.log("Setting user from profile:", userData);
+                setUser(userData);
+                localStorage.setItem("codekids_user", JSON.stringify(userData));
+              }
+            } catch (error) {
+              console.error("Error in auth state change:", error);
+            }
+          }, 0);
         } else {
           console.log("Clearing user data");
           setUser(null);
@@ -42,27 +70,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     );
 
-    // Check for saved user data in localStorage on initial load
-    const storedUser = localStorage.getItem("codekids_user");
-    if (storedUser) {
-      console.log("Found user in localStorage");
-      setUser(JSON.parse(storedUser));
-    }
-    
     // Check for existing Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log("Initial session check:", session ? "Found session" : "No session");
-      if (session) {
-        const userData = {
-          id: session.user.id,
-          email: session.user.email as string,
-          name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "",
-          role: session.user.user_metadata.role as UserRole || "student",
-          profileImage: session.user.user_metadata.profileImage,
-        };
-        console.log("Setting user from initial session:", userData);
-        setUser(userData);
-        localStorage.setItem("codekids_user", JSON.stringify(userData));
+      
+      if (session?.user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching initial profile:", error);
+            // Fallback to session user metadata
+            const userData = {
+              id: session.user.id,
+              email: session.user.email as string,
+              name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "",
+              role: session.user.user_metadata.role as UserRole || "student",
+              profileImage: session.user.user_metadata.profileImage,
+            };
+            setUser(userData);
+            localStorage.setItem("codekids_user", JSON.stringify(userData));
+          } else {
+            const userData = {
+              id: profile.id,
+              email: session.user.email as string,
+              name: profile.name,
+              role: profile.role as UserRole,
+              profileImage: profile.profile_image,
+            };
+            console.log("Setting user from initial profile:", userData);
+            setUser(userData);
+            localStorage.setItem("codekids_user", JSON.stringify(userData));
+          }
+        } catch (error) {
+          console.error("Error fetching initial profile:", error);
+        }
       }
       setIsLoading(false);
     });
