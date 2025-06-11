@@ -32,29 +32,32 @@ export type Database = {
       }
       competition_participants: {
         Row: {
+          code_submitted: string | null
           competition_id: string
-          completed: boolean
-          created_at: string
+          completed_at: string | null
           id: string
-          rank: number | null
+          is_completed: boolean
+          joined_at: string
           score: number | null
           user_id: string
         }
         Insert: {
+          code_submitted?: string | null
           competition_id: string
-          completed?: boolean
-          created_at?: string
+          completed_at?: string | null
           id?: string
-          rank?: number | null
+          is_completed?: boolean
+          joined_at?: string
           score?: number | null
           user_id: string
         }
         Update: {
+          code_submitted?: string | null
           competition_id?: string
-          completed?: boolean
-          created_at?: string
+          completed_at?: string | null
           id?: string
-          rank?: number | null
+          is_completed?: boolean
+          joined_at?: string
           score?: number | null
           user_id?: string
         }
@@ -70,31 +73,58 @@ export type Database = {
       }
       competitions: {
         Row: {
+          category: string
+          code_template: string
           created_at: string
-          date: string
+          created_by: string | null
           description: string | null
           difficulty: string
+          duration_minutes: number
+          function_name: string
+          hints: Json
           id: string
-          name: string
-          total_participants: number
+          max_participants: number | null
+          problem_statement: string
+          start_time: string | null
+          test_cases: Json
+          title: string
+          updated_at: string
         }
         Insert: {
+          category?: string
+          code_template: string
           created_at?: string
-          date?: string
+          created_by?: string | null
           description?: string | null
           difficulty: string
+          duration_minutes?: number
+          function_name: string
+          hints?: Json
           id?: string
-          name: string
-          total_participants?: number
+          max_participants?: number | null
+          problem_statement: string
+          start_time?: string | null
+          test_cases?: Json
+          title: string
+          updated_at?: string
         }
         Update: {
+          category?: string
+          code_template?: string
           created_at?: string
-          date?: string
+          created_by?: string | null
           description?: string | null
           difficulty?: string
+          duration_minutes?: number
+          function_name?: string
+          hints?: Json
           id?: string
-          name?: string
-          total_participants?: number
+          max_participants?: number | null
+          problem_statement?: string
+          start_time?: string | null
+          test_cases?: Json
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

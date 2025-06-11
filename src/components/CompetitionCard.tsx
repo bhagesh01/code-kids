@@ -11,13 +11,12 @@ export interface CompetitionData {
   id: string;
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
-  participants: number;
-  maxParticipants: number;
-  startTime: string;
-  duration: number; // in minutes
-  category: 'hiring' | 'arena';
-  company?: string;  // For hiring competitions
-  positions?: number; // Number of positions for hiring competitions
+  description?: string;
+  category: 'practice' | 'scheduled';
+  start_time?: string;
+  duration_minutes: number;
+  max_participants?: number;
+  participants?: number; // This would come from a join with participants table
 }
 
 interface CompetitionCardProps {
@@ -32,8 +31,21 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition }) => {
   
   useEffect(() => {
     const calculateTimeStatus = () => {
+      // For practice competitions, always allow joining
+      if (competition.category === 'practice') {
+        setCanJoin(true);
+        setHasStarted(false);
+        return;
+      }
+
+      // For scheduled competitions, check timing
+      if (!competition.start_time) {
+        setCanJoin(true);
+        return;
+      }
+
       const now = new Date();
-      const startTime = new Date(competition.startTime);
+      const startTime = new Date(competition.start_time);
       
       // Time in milliseconds until competition starts
       const timeToStart = startTime.getTime() - now.getTime();
@@ -55,11 +67,12 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition }) => {
     // Initial calculation
     calculateTimeStatus();
     
-    // Update every minute
-    const timer = setInterval(calculateTimeStatus, 60000);
-    
-    return () => clearInterval(timer);
-  }, [competition.startTime]);
+    // Update every minute for scheduled competitions
+    if (competition.category === 'scheduled') {
+      const timer = setInterval(calculateTimeStatus, 60000);
+      return () => clearInterval(timer);
+    }
+  }, [competition.start_time, competition.category]);
 
   // Helper function to get color based on difficulty
   const getDifficultyColor = (difficulty: string) => {
@@ -87,7 +100,7 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition }) => {
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
-  const isHiring = competition.category === 'hiring';
+  const isPractice = competition.category === 'practice';
 
   const handleDisabledClick = () => {
     toast({
@@ -98,12 +111,6 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition }) => {
 
   return (
     <Card className="hover-card overflow-hidden">
-      {isHiring && (
-        <div className="bg-primary text-white px-3 py-1 text-xs flex items-center justify-center gap-2">
-          <Building className="h-3 w-3" />
-          <span>Hiring Challenge • Top {competition.positions} get interviews</span>
-        </div>
-      )}
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{competition.title}</CardTitle>
@@ -111,38 +118,43 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition }) => {
             {competition.difficulty}
           </Badge>
         </div>
-        {isHiring && competition.company && (
-          <div className="text-sm font-medium text-primary mt-2 flex items-center gap-2">
-            <Building className="h-4 w-4" />
-            {competition.company}
-          </div>
+        {competition.description && (
+          <p className="text-sm text-muted-foreground mt-2">
+            {competition.description}
+          </p>
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        {competition.start_time && (
+          <>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">Date:</span> {formatDate(competition.start_time)}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">Time:</span> {formatTime(competition.start_time)}
+            </div>
+          </>
+        )}
         <div className="text-sm text-muted-foreground">
-          <span className="font-medium">Date:</span> {formatDate(competition.startTime)}
+          <span className="font-medium">Duration:</span> {competition.duration_minutes} mins
         </div>
-        <div className="text-sm text-muted-foreground">
-          <span className="font-medium">Time:</span> {formatTime(competition.startTime)}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          <span className="font-medium">Duration:</span> {competition.duration} mins
-        </div>
-        <div className="text-sm text-muted-foreground">
-          <span className="font-medium">Participants:</span> {competition.participants}/{competition.maxParticipants}
-        </div>
+        {competition.max_participants && (
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium">Max Participants:</span> {competition.max_participants}
+          </div>
+        )}
         
-        {!canJoin && !hasStarted && (
+        {!canJoin && !hasStarted && !isPractice && (
           <div className="flex items-center gap-2 text-amber-600 mt-2">
             <Clock className="h-4 w-4" />
             <span className="text-sm">Available in {timeRemaining} min</span>
           </div>
         )}
         
-        {competition.category === 'arena' && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+        {isPractice && (
+          <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
             <Users className="h-3 w-3" /> 
-            <span>Arena Competition</span>
+            <span>Practice Mode</span>
           </div>
         )}
       </CardContent>
@@ -150,7 +162,7 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition }) => {
         {canJoin ? (
           <Link to={`/competitions/${competition.id}`} className="w-full">
             <Button className="w-full hover-scale">
-              {isHiring ? "Join Hiring Challenge" : "Join Challenge"}
+              {isPractice ? "Start Practice" : "Join Competition"}
             </Button>
           </Link>
         ) : (
