@@ -22,19 +22,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state change event:", event);
+        console.log("Auth state change event:", event, session?.user?.id);
         
-        if (session?.user) {
-          // Fetch user profile from profiles table
+        if (session?.user && event !== 'SIGNED_OUT') {
+          // Use setTimeout to prevent potential deadlocks
           setTimeout(async () => {
             try {
+              // Fetch user profile from profiles table
               const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', session.user.id)
                 .single();
 
-              if (error) {
+              if (error && error.code !== 'PGRST116') {
                 console.error("Error fetching profile:", error);
                 // Fallback to session user metadata
                 const userData = {
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 };
                 setUser(userData);
                 localStorage.setItem("codekids_user", JSON.stringify(userData));
-              } else {
+              } else if (profile) {
                 const userData = {
                   id: profile.id,
                   email: session.user.email as string,
@@ -70,20 +71,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     );
 
-    // Check for existing Supabase session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log("Initial session check:", session ? "Found session" : "No session");
-      
-      if (session?.user) {
-        try {
-          const { data: profile, error } = await supabase
+    // Check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          console.log("Initial session found:", session.user.id);
+          
+          // Fetch user profile
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (error) {
-            console.error("Error fetching initial profile:", error);
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.error("Error fetching initial profile:", profileError);
             // Fallback to session user metadata
             const userData = {
               id: session.user.id,
@@ -94,7 +104,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             };
             setUser(userData);
             localStorage.setItem("codekids_user", JSON.stringify(userData));
-          } else {
+          } else if (profile) {
             const userData = {
               id: profile.id,
               email: session.user.email as string,
@@ -106,12 +116,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setUser(userData);
             localStorage.setItem("codekids_user", JSON.stringify(userData));
           }
-        } catch (error) {
-          console.error("Error fetching initial profile:", error);
+        } else {
+          console.log("No initial session found");
         }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => {
       subscription.unsubscribe();
@@ -121,16 +136,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Attempting login with:", email);
+      
       // Try Supabase authentication first
       const { userData: supabaseUser, error: supabaseError } = await authenticateWithSupabase(email, password);
       
       if (supabaseError) {
         // Fall back to mock users if Supabase fails
+        console.log("Supabase login failed, trying mock users");
         const { userData: mockUser, error: mockError } = authenticateWithMockData(email, password);
         
         if (mockError) {
           setIsLoading(false);
-          toast.error(mockError.message);
           throw mockError;
         }
         
@@ -140,18 +157,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         toast.success(`Welcome back, ${mockUser.name}!`);
         console.log("Login successful with mock user:", mockUser);
       } else if (supabaseUser) {
-        // Save Supabase user data
-        localStorage.setItem("codekids_user", JSON.stringify(supabaseUser));
-        setUser(supabaseUser);
+        // Supabase auth successful - user data will be set by onAuthStateChange
         toast.success(`Welcome back, ${supabaseUser.name}!`);
         console.log("Login successful with Supabase user:", supabaseUser);
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Login failed");
+      setIsLoading(false);
       throw error;
     } finally {
-      setIsLoading(false);
+      // Only set loading to false if not using Supabase (which will be handled by onAuthStateChange)
+      if (!supabase) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -177,7 +195,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error logging out:", error);
+        toast.error("Error logging out");
+        return;
+      }
+      
       localStorage.removeItem("codekids_user");
       setUser(null);
       toast.info("Logged out successfully");
