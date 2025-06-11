@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -114,7 +113,7 @@ const CompetitionRoom = () => {
 
         console.log("Competition data:", competition);
 
-        // Transform Supabase data to match our interface
+        // Transform Supabase data to match our interface with proper type casting
         const transformedData: CompetitionData = {
           id: competition.id,
           title: competition.title,
@@ -124,8 +123,8 @@ const CompetitionRoom = () => {
           duration: competition.duration_minutes,
           category: competition.category,
           problem: competition.problem_statement,
-          tests: competition.test_cases || [],
-          hints: competition.hints || [],
+          tests: Array.isArray(competition.test_cases) ? competition.test_cases as Array<{ input: string; expected: string }> : [],
+          hints: Array.isArray(competition.hints) ? competition.hints as Array<{ text: string; penalty: number }> : [],
           codeTemplate: competition.code_template,
           functionName: competition.function_name
         };

@@ -16,7 +16,7 @@ interface CompetitionData {
   title: string;
   difficulty: "Easy" | "Medium" | "Hard";
   startTime: string;
-  duration: number;
+  duration_minutes: number; // Changed from duration to duration_minutes
   participants: number;
   maxParticipants: number;
   category: "arena" | "hiring";
@@ -42,7 +42,7 @@ const Competitions = () => {
       title: "Array Algorithms Challenge",
       difficulty: "Easy",
       startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      duration: 90,
+      duration_minutes: 90,
       participants: 156,
       maxParticipants: 500,
       category: "arena"
@@ -52,7 +52,7 @@ const Competitions = () => {
       title: "TechCorp Hiring Sprint",
       difficulty: "Hard",
       startTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-      duration: 120,
+      duration_minutes: 120,
       participants: 45,
       maxParticipants: 100,
       category: "hiring",
@@ -64,7 +64,7 @@ const Competitions = () => {
       title: "Dynamic Programming Mastery",
       difficulty: "Hard",
       startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      duration: 150,
+      duration_minutes: 150,
       participants: 89,
       maxParticipants: 300,
       category: "arena"
@@ -76,7 +76,7 @@ const Competitions = () => {
       title: "Two Sum Problem",
       difficulty: "Easy",
       startTime: new Date().toISOString(), // Available now
-      duration: 30,
+      duration_minutes: 30,
       participants: 1243,
       maxParticipants: 9999,
       category: "arena"
@@ -86,7 +86,7 @@ const Competitions = () => {
       title: "Binary Search Basics",
       difficulty: "Easy",
       startTime: new Date().toISOString(),
-      duration: 45,
+      duration_minutes: 45,
       participants: 987,
       maxParticipants: 9999,
       category: "arena"
@@ -96,7 +96,7 @@ const Competitions = () => {
       title: "Linked List Manipulation",
       difficulty: "Easy",
       startTime: new Date().toISOString(),
-      duration: 60,
+      duration_minutes: 60,
       participants: 856,
       maxParticipants: 9999,
       category: "arena"
@@ -106,7 +106,7 @@ const Competitions = () => {
       title: "Stack and Queue Operations",
       difficulty: "Easy",
       startTime: new Date().toISOString(),
-      duration: 50,
+      duration_minutes: 50,
       participants: 734,
       maxParticipants: 9999,
       category: "arena"
@@ -116,7 +116,7 @@ const Competitions = () => {
       title: "String Pattern Matching",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 75,
+      duration_minutes: 75,
       participants: 621,
       maxParticipants: 9999,
       category: "arena"
@@ -126,7 +126,7 @@ const Competitions = () => {
       title: "Tree Traversal Algorithms",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 90,
+      duration_minutes: 90,
       participants: 543,
       maxParticipants: 9999,
       category: "arena"
@@ -136,7 +136,7 @@ const Competitions = () => {
       title: "Graph BFS & DFS",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 100,
+      duration_minutes: 100,
       participants: 432,
       maxParticipants: 9999,
       category: "arena"
@@ -146,7 +146,7 @@ const Competitions = () => {
       title: "Sliding Window Technique",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 80,
+      duration_minutes: 80,
       participants: 567,
       maxParticipants: 9999,
       category: "arena"
@@ -156,7 +156,7 @@ const Competitions = () => {
       title: "Heap Operations",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 85,
+      duration_minutes: 85,
       participants: 398,
       maxParticipants: 9999,
       category: "arena"
@@ -166,7 +166,7 @@ const Competitions = () => {
       title: "Backtracking Problems",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 120,
+      duration_minutes: 120,
       participants: 234,
       maxParticipants: 9999,
       category: "arena"
@@ -176,7 +176,7 @@ const Competitions = () => {
       title: "Advanced Dynamic Programming",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 150,
+      duration_minutes: 150,
       participants: 189,
       maxParticipants: 9999,
       category: "arena"
@@ -186,7 +186,7 @@ const Competitions = () => {
       title: "Trie Data Structure",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 70,
+      duration_minutes: 70,
       participants: 345,
       maxParticipants: 9999,
       category: "arena"
@@ -196,7 +196,7 @@ const Competitions = () => {
       title: "Union Find Algorithm",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 110,
+      duration_minutes: 110,
       participants: 156,
       maxParticipants: 9999,
       category: "arena"
@@ -206,7 +206,7 @@ const Competitions = () => {
       title: "Bit Manipulation Tricks",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 65,
+      duration_minutes: 65,
       participants: 278,
       maxParticipants: 9999,
       category: "arena"
@@ -216,7 +216,7 @@ const Competitions = () => {
       title: "Shortest Path Algorithms",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 130,
+      duration_minutes: 130,
       participants: 123,
       maxParticipants: 9999,
       category: "arena"
@@ -226,7 +226,7 @@ const Competitions = () => {
       title: "Greedy Algorithm Patterns",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 95,
+      duration_minutes: 95,
       participants: 456,
       maxParticipants: 9999,
       category: "arena"
@@ -236,7 +236,7 @@ const Competitions = () => {
       title: "Segment Tree Fundamentals",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 140,
+      duration_minutes: 140,
       participants: 87,
       maxParticipants: 9999,
       category: "arena"
@@ -246,7 +246,7 @@ const Competitions = () => {
       title: "Matrix Problems Collection",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 85,
+      duration_minutes: 85,
       participants: 367,
       maxParticipants: 9999,
       category: "arena"
@@ -256,7 +256,7 @@ const Competitions = () => {
       title: "Binary Tree Advanced",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 125,
+      duration_minutes: 125,
       participants: 145,
       maxParticipants: 9999,
       category: "arena"
@@ -266,7 +266,7 @@ const Competitions = () => {
       title: "Hash Table Mastery",
       difficulty: "Easy",
       startTime: new Date().toISOString(),
-      duration: 55,
+      duration_minutes: 55,
       participants: 789,
       maxParticipants: 9999,
       category: "arena"
@@ -276,7 +276,7 @@ const Competitions = () => {
       title: "Recursive Problem Solving",
       difficulty: "Medium",
       startTime: new Date().toISOString(),
-      duration: 90,
+      duration_minutes: 90,
       participants: 423,
       maxParticipants: 9999,
       category: "arena"
@@ -286,7 +286,7 @@ const Competitions = () => {
       title: "Advanced Graph Algorithms",
       difficulty: "Hard",
       startTime: new Date().toISOString(),
-      duration: 160,
+      duration_minutes: 160,
       participants: 98,
       maxParticipants: 9999,
       category: "arena"
