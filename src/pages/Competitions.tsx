@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -9,17 +10,18 @@ import { Search, Plus, Users, Clock, Trophy, Calendar, Code } from "lucide-react
 import Navbar from "@/components/Navbar";
 import CompetitionCard from "@/components/CompetitionCard";
 import DifficultyFilter from "@/components/DifficultyFilter";
+import { supabase } from "@/integrations/supabase/client";
 
-// Define types for the competitions data - matching CompetitionCard interface
+// Define types for the competitions data - matching database structure
 interface CompetitionData {
   id: string;
   title: string;
   difficulty: "Easy" | "Medium" | "Hard";
   startTime: string;
-  duration_minutes: number; // Changed from duration to duration_minutes
+  duration_minutes: number;
   participants: number;
   maxParticipants: number;
-  category: "arena" | "hiring";
+  category: "practice" | "scheduled"; // Match database categories
   company?: string;
   positions?: number;
 }
@@ -34,273 +36,45 @@ const Competitions = () => {
   const [competitions, setCompetitions] = useState<CompetitionData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock competitions - 20+ always-available DSA competitions
-  const mockCompetitions: CompetitionData[] = [
-    // Scheduled competitions (timed)
-    {
-      id: "1",
-      title: "Array Algorithms Challenge",
-      difficulty: "Easy",
-      startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      duration_minutes: 90,
-      participants: 156,
-      maxParticipants: 500,
-      category: "arena"
-    },
-    {
-      id: "2",
-      title: "TechCorp Hiring Sprint",
-      difficulty: "Hard",
-      startTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-      duration_minutes: 120,
-      participants: 45,
-      maxParticipants: 100,
-      category: "hiring",
-      company: "TechCorp",
-      positions: 5
-    },
-    {
-      id: "3",
-      title: "Dynamic Programming Mastery",
-      difficulty: "Hard",
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      duration_minutes: 150,
-      participants: 89,
-      maxParticipants: 300,
-      category: "arena"
-    },
-
-    // Always available mock competitions (anytime access)
-    {
-      id: "mock-1",
-      title: "Two Sum Problem",
-      difficulty: "Easy",
-      startTime: new Date().toISOString(), // Available now
-      duration_minutes: 30,
-      participants: 1243,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-2", 
-      title: "Binary Search Basics",
-      difficulty: "Easy",
-      startTime: new Date().toISOString(),
-      duration_minutes: 45,
-      participants: 987,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-3",
-      title: "Linked List Manipulation",
-      difficulty: "Easy",
-      startTime: new Date().toISOString(),
-      duration_minutes: 60,
-      participants: 856,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-4",
-      title: "Stack and Queue Operations",
-      difficulty: "Easy",
-      startTime: new Date().toISOString(),
-      duration_minutes: 50,
-      participants: 734,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-5",
-      title: "String Pattern Matching",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 75,
-      participants: 621,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-6",
-      title: "Tree Traversal Algorithms",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 90,
-      participants: 543,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-7",
-      title: "Graph BFS & DFS",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 100,
-      participants: 432,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-8",
-      title: "Sliding Window Technique",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 80,
-      participants: 567,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-9",
-      title: "Heap Operations",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 85,
-      participants: 398,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-10",
-      title: "Backtracking Problems",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 120,
-      participants: 234,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-11",
-      title: "Advanced Dynamic Programming",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 150,
-      participants: 189,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-12",
-      title: "Trie Data Structure",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 70,
-      participants: 345,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-13",
-      title: "Union Find Algorithm",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 110,
-      participants: 156,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-14",
-      title: "Bit Manipulation Tricks",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 65,
-      participants: 278,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-15",
-      title: "Shortest Path Algorithms",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 130,
-      participants: 123,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-16",
-      title: "Greedy Algorithm Patterns",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 95,
-      participants: 456,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-17",
-      title: "Segment Tree Fundamentals",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 140,
-      participants: 87,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-18",
-      title: "Matrix Problems Collection",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 85,
-      participants: 367,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-19",
-      title: "Binary Tree Advanced",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 125,
-      participants: 145,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-20",
-      title: "Hash Table Mastery",
-      difficulty: "Easy",
-      startTime: new Date().toISOString(),
-      duration_minutes: 55,
-      participants: 789,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-21",
-      title: "Recursive Problem Solving",
-      difficulty: "Medium",
-      startTime: new Date().toISOString(),
-      duration_minutes: 90,
-      participants: 423,
-      maxParticipants: 9999,
-      category: "arena"
-    },
-    {
-      id: "mock-22",
-      title: "Advanced Graph Algorithms",
-      difficulty: "Hard",
-      startTime: new Date().toISOString(),
-      duration_minutes: 160,
-      participants: 98,
-      maxParticipants: 9999,
-      category: "arena"
-    }
-  ];
-
   useEffect(() => {
-    // Simulate loading competitions from backend
-    const timer = setTimeout(() => {
-      setCompetitions(mockCompetitions);
-      setLoading(false);
-    }, 1000);
+    const fetchCompetitions = async () => {
+      try {
+        console.log("Fetching competitions from Supabase...");
+        
+        const { data, error } = await supabase
+          .from('competitions')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-    return () => clearTimeout(timer);
+        if (error) {
+          console.error("Error fetching competitions:", error);
+          setLoading(false);
+          return;
+        }
+
+        console.log("Fetched competitions:", data);
+
+        // Transform Supabase data to match our interface
+        const transformedCompetitions: CompetitionData[] = data.map(comp => ({
+          id: comp.id,
+          title: comp.title,
+          difficulty: comp.difficulty as "Easy" | "Medium" | "Hard",
+          startTime: comp.start_time || new Date().toISOString(),
+          duration_minutes: comp.duration_minutes,
+          participants: Math.floor(Math.random() * 100), // Mock participant count
+          maxParticipants: comp.max_participants || 100,
+          category: comp.category as "practice" | "scheduled"
+        }));
+
+        setCompetitions(transformedCompetitions);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching competitions:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchCompetitions();
   }, []);
 
   // Filter competitions based on search and difficulty
@@ -313,14 +87,9 @@ const Competitions = () => {
     return matchesSearch && matchesDifficulty;
   });
 
-  // Separate scheduled, mock, and hiring competitions
-  const scheduledCompetitions = filteredCompetitions.filter(comp => 
-    comp.category === "arena" && !comp.id.startsWith("mock-")
-  );
-  const mockArenaCompetitions = filteredCompetitions.filter(comp => 
-    comp.category === "arena" && comp.id.startsWith("mock-")
-  );
-  const hiringCompetitions = filteredCompetitions.filter(comp => comp.category === "hiring");
+  // Separate practice and scheduled competitions
+  const practiceCompetitions = filteredCompetitions.filter(comp => comp.category === "practice");
+  const scheduledCompetitions = filteredCompetitions.filter(comp => comp.category === "scheduled");
 
   if (loading) {
     return (
@@ -377,7 +146,7 @@ const Competitions = () => {
           />
         </div>
 
-        {/* Mock Competitions - Always Available */}
+        {/* Practice Competitions - Always Available */}
         <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <Code className="h-6 w-6 text-primary" />
@@ -385,9 +154,9 @@ const Competitions = () => {
             <Badge variant="secondary">Available Anytime</Badge>
           </div>
           
-          {mockArenaCompetitions.length > 0 ? (
+          {practiceCompetitions.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {mockArenaCompetitions.map((competition) => (
+              {practiceCompetitions.map((competition) => (
                 <CompetitionCard
                   key={competition.id}
                   competition={competition}
@@ -404,7 +173,7 @@ const Competitions = () => {
           )}
         </section>
 
-        {/* Scheduled Arena Competitions */}
+        {/* Scheduled Competitions */}
         {scheduledCompetitions.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center gap-2 mb-6">
@@ -424,24 +193,14 @@ const Competitions = () => {
           </section>
         )}
 
-        {/* Hiring Competitions */}
-        {hiringCompetitions.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-6">
-              <Users className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-semibold">Hiring Competitions</h2>
-              <Badge variant="secondary">Career Opportunities</Badge>
-            </div>
-            
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {hiringCompetitions.map((competition) => (
-                <CompetitionCard
-                  key={competition.id}
-                  competition={competition}
-                />
-              ))}
-            </div>
-          </section>
+        {/* Show message if no competitions found */}
+        {filteredCompetitions.length === 0 && (
+          <Card className="text-center py-8">
+            <CardContent>
+              <Trophy className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No competitions found. Try adjusting your filters.</p>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>
