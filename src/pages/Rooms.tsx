@@ -26,13 +26,9 @@ interface Room {
   } | null;
   room_participants: Array<{
     user_id: string;
-    profiles: {
-      name: string;
-    } | null;
+    user_name: string;
   }>;
-  creator_profile: {
-    name: string;
-  } | null;
+  creator_name: string;
 }
 
 const Rooms = () => {
@@ -52,7 +48,9 @@ const Rooms = () => {
     if (!user) return;
 
     try {
-      // First get the rooms
+      setLoading(true);
+      
+      // First get the rooms with competitions
       const { data: roomsData, error: roomsError } = await supabase
         .from('competition_rooms')
         .select(`
@@ -67,36 +65,59 @@ const Rooms = () => {
         return;
       }
 
-      // Then get room participants with their profiles
-      const roomsWithParticipants = await Promise.all(
-        (roomsData || []).map(async (room) => {
-          const { data: participantsData } = await supabase
-            .from('room_participants')
-            .select(`
-              user_id,
-              profiles(name)
-            `)
-            .eq('room_id', room.id);
+      // Then get room participants
+      const { data: participantsData, error: participantsError } = await supabase
+        .from('room_participants')
+        .select('room_id, user_id');
 
-          // Get creator profile
-          const { data: creatorProfile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', room.created_by)
-            .single();
+      if (participantsError) {
+        console.error("Error fetching participants:", participantsError);
+        return;
+      }
 
-          return {
-            ...room,
-            competition: room.competitions,
-            room_participants: participantsData || [],
-            creator_profile: creatorProfile
-          };
-        })
+      // Get all unique user IDs from participants and room creators
+      const allUserIds = new Set([
+        ...participantsData.map(p => p.user_id),
+        ...roomsData.map(r => r.created_by)
+      ]);
+
+      // Fetch profiles for all users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', Array.from(allUserIds));
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return;
+      }
+
+      // Create a map of user IDs to names
+      const userNameMap = new Map(
+        profilesData.map(profile => [profile.id, profile.name])
       );
+
+      // Combine the data
+      const roomsWithParticipants: Room[] = roomsData.map(room => {
+        const roomParticipants = participantsData
+          .filter(p => p.room_id === room.id)
+          .map(p => ({
+            user_id: p.user_id,
+            user_name: userNameMap.get(p.user_id) || 'Unknown User'
+          }));
+
+        return {
+          ...room,
+          competition: room.competitions,
+          room_participants: roomParticipants,
+          creator_name: userNameMap.get(room.created_by) || 'Unknown User'
+        };
+      });
 
       setRooms(roomsWithParticipants);
     } catch (error) {
       console.error("Error fetching rooms:", error);
+      toast.error("Failed to load rooms");
     } finally {
       setLoading(false);
     }
@@ -204,7 +225,7 @@ const Rooms = () => {
                       <div className="flex-1">
                         <CardTitle className="text-lg">{room.name}</CardTitle>
                         <CardDescription className="mt-1">
-                          by {room.creator_profile?.name || 'Unknown'}
+                          by {room.creator_name}
                         </CardDescription>
                       </div>
                       {isCreator && (
