@@ -44,4 +44,12 @@ export const MOCK_USERS = [
     role: "admin" as UserRole,
     profileImage: "https://i.pravatar.cc/300?img=3",
   },
+  {
+    id: "testuser",
+    email: "justforfunuse01@gmail.com",
+    password: "bobby@1234",
+    name: "Bobby Test",
+    role: "student" as UserRole,
+    profileImage: "https://i.pravatar.cc/300?img=4",
+  },
 ];

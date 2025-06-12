@@ -14,16 +14,28 @@ export const authenticateWithSupabase = async (email: string, password: string) 
 
     if (error) {
       console.error("Supabase login error:", error);
+      
       if (error.message.includes("Email not confirmed")) {
-        const message = "Please confirm your email before logging in.";
+        const message = "Please check your email and click the confirmation link before logging in.";
         toast.error(message);
         throw new Error(message);
       }
+      
       if (error.message.includes("Invalid login credentials")) {
-        const message = "Invalid email or password";
+        // Check if user exists but is unconfirmed
+        const { data: userData } = await supabase.auth.admin.getUserById(email);
+        if (userData && !userData.user?.email_confirmed_at) {
+          const message = "Please check your email and click the confirmation link to activate your account.";
+          toast.error(message);
+          throw new Error(message);
+        }
+        
+        const message = "Invalid email or password. Please check your credentials and try again.";
         toast.error(message);
         throw new Error(message);
       }
+      
+      toast.error(error.message);
       throw new Error(error.message);
     }
 
@@ -69,14 +81,18 @@ export const authenticateWithSupabase = async (email: string, password: string) 
 };
 
 export const authenticateWithMockData = (email: string, password: string) => {
+  console.log("Trying mock authentication for:", email);
+  
   const foundUser = MOCK_USERS.find(
     (u) => u.email === email && u.password === password
   );
 
   if (!foundUser) {
+    console.log("No mock user found for:", email);
     return { error: new Error("Invalid email or password") };
   }
 
+  console.log("Mock user found:", foundUser.name);
   const userData = {
     id: foundUser.id,
     name: foundUser.name,
@@ -128,11 +144,6 @@ export const signupWithSupabase = async (userData: any, role: UserRole) => {
   }
   
   console.log("Signup successful:", data);
-  
-  // Wait a moment for the trigger to execute
-  if (data.user && !data.user.email_confirmed_at) {
-    console.log("User created, profile should be created by trigger");
-  }
   
   return { data, error };
 };
