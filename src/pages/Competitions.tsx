@@ -121,12 +121,19 @@ const Competitions = () => {
             </p>
           </div>
           
-          {user?.role === "recruiter" || user?.role === "admin" ? (
-            <Button onClick={() => navigate("/create-competition")} className="hover-scale">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Competition
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/rooms")} variant="outline" className="hover-scale">
+              <Users className="mr-2 h-4 w-4" />
+              Competition Rooms
             </Button>
-          ) : null}
+            
+            {user?.role === "recruiter" || user?.role === "admin" ? (
+              <Button onClick={() => navigate("/create-competition")} className="hover-scale">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Competition
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {/* Filters Section */}

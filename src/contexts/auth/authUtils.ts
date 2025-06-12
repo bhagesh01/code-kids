@@ -128,5 +128,11 @@ export const signupWithSupabase = async (userData: any, role: UserRole) => {
   }
   
   console.log("Signup successful:", data);
+  
+  // Wait a moment for the trigger to execute
+  if (data.user && !data.user.email_confirmed_at) {
+    console.log("User created, profile should be created by trigger");
+  }
+  
   return { data, error };
 };
