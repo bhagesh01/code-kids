@@ -141,8 +141,8 @@ const Competitions = () => {
             />
           </div>
           <DifficultyFilter
-            selectedDifficulty={difficultyFilter}
-            onDifficultyChange={setDifficultyFilter}
+            value={difficultyFilter}
+            onValueChange={setDifficultyFilter}
           />
         </div>
 
