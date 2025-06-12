@@ -12,18 +12,17 @@ import CompetitionCard from "@/components/CompetitionCard";
 import DifficultyFilter from "@/components/DifficultyFilter";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define types for the competitions data - matching database structure
+// Define types for the competitions data - matching CompetitionCard interface
 interface CompetitionData {
   id: string;
   title: string;
   difficulty: "Easy" | "Medium" | "Hard";
-  startTime: string;
+  description?: string;
+  category: "practice" | "scheduled";
+  start_time?: string;
   duration_minutes: number;
-  participants: number;
-  maxParticipants: number;
-  category: "practice" | "scheduled"; // Match database categories
-  company?: string;
-  positions?: number;
+  max_participants?: number;
+  participants?: number;
 }
 
 type DifficultyFilterType = "All" | "Easy" | "Medium" | "Hard";
@@ -58,12 +57,13 @@ const Competitions = () => {
         const transformedCompetitions: CompetitionData[] = data.map(comp => ({
           id: comp.id,
           title: comp.title,
+          description: comp.description || undefined,
           difficulty: comp.difficulty as "Easy" | "Medium" | "Hard",
-          startTime: comp.start_time || new Date().toISOString(),
+          category: comp.category as "practice" | "scheduled",
+          start_time: comp.start_time || undefined,
           duration_minutes: comp.duration_minutes,
-          participants: Math.floor(Math.random() * 100), // Mock participant count
-          maxParticipants: comp.max_participants || 100,
-          category: comp.category as "practice" | "scheduled"
+          max_participants: comp.max_participants || undefined,
+          participants: Math.floor(Math.random() * 50) // Mock participant count for now
         }));
 
         setCompetitions(transformedCompetitions);
@@ -80,7 +80,7 @@ const Competitions = () => {
   // Filter competitions based on search and difficulty
   const filteredCompetitions = competitions.filter((competition) => {
     const matchesSearch = competition.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (competition.company && competition.company.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (competition.description && competition.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesDifficulty = difficultyFilter === "All" || competition.difficulty === difficultyFilter;
     
@@ -93,43 +93,44 @@ const Competitions = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Loading competitions...</p>
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Loading competitions...</p>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="flex-grow container px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+      <main className="container mx-auto px-4 py-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Competitions</h1>
-            <p className="text-muted-foreground">Join coding challenges and showcase your skills</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Coding Competitions</h1>
+            <p className="text-muted-foreground">
+              Practice your skills or compete in live tournaments
+            </p>
           </div>
           
-          {(user?.role === "recruiter" || user?.role === "admin") && (
-            <Button 
-              onClick={() => navigate("/competitions/create")}
-              className="mt-4 md:mt-0 hover-scale"
-            >
+          {user?.role === "recruiter" || user?.role === "admin" ? (
+            <Button onClick={() => navigate("/create-competition")} className="hover-scale">
               <Plus className="mr-2 h-4 w-4" />
               Create Competition
             </Button>
-          )}
+          ) : null}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
+        {/* Filters Section */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -139,23 +140,22 @@ const Competitions = () => {
               className="pl-10"
             />
           </div>
-          
           <DifficultyFilter
-            value={difficultyFilter}
-            onValueChange={setDifficultyFilter}
+            selectedDifficulty={difficultyFilter}
+            onDifficultyChange={setDifficultyFilter}
           />
         </div>
 
-        {/* Practice Competitions - Always Available */}
-        <section className="mb-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Code className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold">Practice Arena</h2>
-            <Badge variant="secondary">Available Anytime</Badge>
-          </div>
-          
-          {practiceCompetitions.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Practice Competitions Section */}
+        {practiceCompetitions.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Code className="h-5 w-5 text-blue-600" />
+              <h2 className="text-2xl font-semibold">Practice Problems</h2>
+              <Badge variant="secondary">{practiceCompetitions.length}</Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {practiceCompetitions.map((competition) => (
                 <CompetitionCard
                   key={competition.id}
@@ -163,26 +163,19 @@ const Competitions = () => {
                 />
               ))}
             </div>
-          ) : (
-            <Card className="text-center py-8">
-              <CardContent>
-                <Code className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No practice competitions match your filters.</p>
-              </CardContent>
-            </Card>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* Scheduled Competitions */}
+        {/* Scheduled Competitions Section */}
         {scheduledCompetitions.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-8">
             <div className="flex items-center gap-2 mb-6">
-              <Trophy className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-semibold">Scheduled Competitions</h2>
-              <Badge variant="secondary">Timed Events</Badge>
+              <Calendar className="h-5 w-5 text-green-600" />
+              <h2 className="text-2xl font-semibold">Scheduled Competitions</h2>
+              <Badge variant="secondary">{scheduledCompetitions.length}</Badge>
             </div>
             
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {scheduledCompetitions.map((competition) => (
                 <CompetitionCard
                   key={competition.id}

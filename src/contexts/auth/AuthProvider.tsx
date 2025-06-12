@@ -25,48 +25,47 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("Auth state change event:", event, session?.user?.id);
         
         if (session?.user && event !== 'SIGNED_OUT') {
-          // Use setTimeout to prevent potential deadlocks
-          setTimeout(async () => {
-            try {
-              // Fetch user profile from profiles table
-              const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+          // Fetch user profile from profiles table
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-              if (error && error.code !== 'PGRST116') {
-                console.error("Error fetching profile:", error);
-                // Fallback to session user metadata
-                const userData = {
-                  id: session.user.id,
-                  email: session.user.email as string,
-                  name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "",
-                  role: session.user.user_metadata.role as UserRole || "student",
-                  profileImage: session.user.user_metadata.profileImage,
-                };
-                setUser(userData);
-                localStorage.setItem("codekids_user", JSON.stringify(userData));
-              } else if (profile) {
-                const userData = {
-                  id: profile.id,
-                  email: session.user.email as string,
-                  name: profile.name,
-                  role: profile.role as UserRole,
-                  profileImage: profile.profile_image,
-                };
-                console.log("Setting user from profile:", userData);
-                setUser(userData);
-                localStorage.setItem("codekids_user", JSON.stringify(userData));
-              }
-            } catch (error) {
-              console.error("Error in auth state change:", error);
+            if (error && error.code !== 'PGRST116') {
+              console.error("Error fetching profile:", error);
+              // Fallback to session user metadata
+              const userData = {
+                id: session.user.id,
+                email: session.user.email as string,
+                name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "",
+                role: session.user.user_metadata.role as UserRole || "student",
+                profileImage: session.user.user_metadata.profileImage,
+              };
+              setUser(userData);
+              localStorage.setItem("codekids_user", JSON.stringify(userData));
+            } else if (profile) {
+              const userData = {
+                id: profile.id,
+                email: session.user.email as string,
+                name: profile.name,
+                role: profile.role as UserRole,
+                profileImage: profile.profile_image,
+              };
+              console.log("Setting user from profile:", userData);
+              setUser(userData);
+              localStorage.setItem("codekids_user", JSON.stringify(userData));
             }
-          }, 0);
+          } catch (error) {
+            console.error("Error in auth state change:", error);
+          }
+          setIsLoading(false);
         } else {
           console.log("Clearing user data");
           setUser(null);
           localStorage.removeItem("codekids_user");
+          setIsLoading(false);
         }
       }
     );
@@ -156,20 +155,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(mockUser);
         toast.success(`Welcome back, ${mockUser.name}!`);
         console.log("Login successful with mock user:", mockUser);
+        setIsLoading(false);
       } else if (supabaseUser) {
         // Supabase auth successful - user data will be set by onAuthStateChange
         toast.success(`Welcome back, ${supabaseUser.name}!`);
         console.log("Login successful with Supabase user:", supabaseUser);
+        // Loading state will be handled by onAuthStateChange
       }
     } catch (error: any) {
       console.error("Login error:", error);
       setIsLoading(false);
       throw error;
-    } finally {
-      // Only set loading to false if not using Supabase (which will be handled by onAuthStateChange)
-      if (!supabase) {
-        setIsLoading(false);
-      }
     }
   };
 
