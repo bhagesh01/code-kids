@@ -14,6 +14,7 @@ import Signup from "./pages/Signup";
 import Competitions from "./pages/Competitions";
 import CompetitionRoom from "./pages/CompetitionRoom";
 import CreateCompetition from "./pages/CreateCompetition";
+import Rooms from "./pages/Rooms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CompetitionRoom />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/rooms" 
+              element={
+                <ProtectedRoute>
+                  <Rooms />
                 </ProtectedRoute>
               } 
             />

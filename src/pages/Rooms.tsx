@@ -23,16 +23,16 @@ interface Room {
   competition?: {
     title: string;
     difficulty: string;
-  };
+  } | null;
   room_participants: Array<{
     user_id: string;
     profiles: {
       name: string;
-    };
+    } | null;
   }>;
   creator_profile: {
     name: string;
-  };
+  } | null;
 }
 
 const Rooms = () => {
@@ -52,26 +52,49 @@ const Rooms = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First get the rooms
+      const { data: roomsData, error: roomsError } = await supabase
         .from('competition_rooms')
         .select(`
           *,
-          competition:competitions(title, difficulty),
-          room_participants(
-            user_id,
-            profiles(name)
-          ),
-          creator_profile:profiles!competition_rooms_created_by_fkey(name)
+          competitions(title, difficulty)
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching rooms:", error);
+      if (roomsError) {
+        console.error("Error fetching rooms:", roomsError);
         return;
       }
 
-      setRooms(data || []);
+      // Then get room participants with their profiles
+      const roomsWithParticipants = await Promise.all(
+        (roomsData || []).map(async (room) => {
+          const { data: participantsData } = await supabase
+            .from('room_participants')
+            .select(`
+              user_id,
+              profiles(name)
+            `)
+            .eq('room_id', room.id);
+
+          // Get creator profile
+          const { data: creatorProfile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', room.created_by)
+            .single();
+
+          return {
+            ...room,
+            competition: room.competitions,
+            room_participants: participantsData || [],
+            creator_profile: creatorProfile
+          };
+        })
+      );
+
+      setRooms(roomsWithParticipants);
     } catch (error) {
       console.error("Error fetching rooms:", error);
     } finally {
@@ -259,11 +282,13 @@ const Rooms = () => {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         competitions={competitions}
+        onRoomCreated={fetchRooms}
       />
       
       <JoinRoomDialog
         open={joinDialogOpen}
         onOpenChange={setJoinDialogOpen}
+        onRoomJoined={fetchRooms}
       />
     </div>
   );

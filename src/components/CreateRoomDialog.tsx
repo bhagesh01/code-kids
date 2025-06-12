@@ -7,99 +7,77 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateRoomDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  competitions: Array<{
-    id: string;
-    title: string;
-    difficulty: string;
-  }>;
+  competitions: Array<{id: string, title: string, difficulty: string}>;
+  onRoomCreated?: () => void;
 }
 
-const CreateRoomDialog = ({ open, onOpenChange, competitions }: CreateRoomDialogProps) => {
+const CreateRoomDialog = ({ open, onOpenChange, competitions, onRoomCreated }: CreateRoomDialogProps) => {
   const { user } = useAuth();
-  const [roomName, setRoomName] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedCompetition, setSelectedCompetition] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState("10");
-  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    competitionId: "",
+    maxParticipants: 10
+  });
 
-  const handleCreateRoom = async () => {
-    if (!user) {
-      toast.error("You must be logged in to create a room");
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
 
-    if (!roomName.trim()) {
-      toast.error("Room name is required");
-      return;
-    }
-
-    setIsCreating(true);
-
+    setLoading(true);
     try {
-      // Generate room key
-      const { data: keyData, error: keyError } = await supabase.rpc('generate_room_key');
-      
+      // Generate a unique room key
+      const { data: roomKeyData, error: keyError } = await supabase
+        .rpc('generate_room_key');
+
       if (keyError) {
         throw keyError;
       }
 
       // Create the room
-      const { data: roomData, error: roomError } = await supabase
+      const { error } = await supabase
         .from('competition_rooms')
         .insert({
-          room_key: keyData,
-          name: roomName.trim(),
-          description: description.trim() || null,
+          name: formData.name,
+          description: formData.description || null,
+          competition_id: formData.competitionId || null,
+          max_participants: formData.maxParticipants,
           created_by: user.id,
-          competition_id: selectedCompetition || null,
-          max_participants: parseInt(maxParticipants),
-        })
-        .select()
-        .single();
-
-      if (roomError) {
-        throw roomError;
-      }
-
-      // Add creator as participant
-      const { error: participantError } = await supabase
-        .from('room_participants')
-        .insert({
-          room_id: roomData.id,
-          user_id: user.id,
+          room_key: roomKeyData
         });
 
-      if (participantError) {
-        console.error("Error adding creator as participant:", participantError);
+      if (error) {
+        throw error;
       }
 
-      toast.success(`Room created successfully! Room key: ${keyData}`);
-      
-      // Reset form
-      setRoomName("");
-      setDescription("");
-      setSelectedCompetition("");
-      setMaxParticipants("10");
+      toast.success("Room created successfully! Share the room key with your friends.");
+      setFormData({ name: "", description: "", competitionId: "", maxParticipants: 10 });
       onOpenChange(false);
-
+      onRoomCreated?.();
     } catch (error: any) {
       console.error("Error creating room:", error);
-      toast.error(error.message || "Failed to create room");
+      toast.error("Failed to create room");
     } finally {
-      setIsCreating(false);
+      setLoading(false);
     }
   };
 
@@ -109,75 +87,78 @@ const CreateRoomDialog = ({ open, onOpenChange, competitions }: CreateRoomDialog
         <DialogHeader>
           <DialogTitle>Create Competition Room</DialogTitle>
           <DialogDescription>
-            Create a private room where you can invite friends to compete together.
+            Create a private room to compete with friends. They can join using the room key.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="room-name">Room Name</Label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Room Name</Label>
             <Input
-              id="room-name"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
+              id="name"
               placeholder="Enter room name"
-              maxLength={50}
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
             />
           </div>
           
-          <div className="grid gap-2">
+          <div className="space-y-2">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your room"
-              maxLength={200}
+              placeholder="Enter room description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
             />
           </div>
           
-          <div className="grid gap-2">
+          <div className="space-y-2">
             <Label htmlFor="competition">Competition (Optional)</Label>
-            <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+            <Select
+              value={formData.competitionId}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, competitionId: value }))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a competition" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No specific competition</SelectItem>
-                {competitions.map((comp) => (
-                  <SelectItem key={comp.id} value={comp.id}>
-                    {comp.title} ({comp.difficulty})
+                {competitions.map((competition) => (
+                  <SelectItem key={competition.id} value={competition.id}>
+                    {competition.title} ({competition.difficulty})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
-          <div className="grid gap-2">
-            <Label htmlFor="max-participants">Max Participants</Label>
-            <Select value={maxParticipants} onValueChange={setMaxParticipants}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[2, 5, 10, 20, 50].map((num) => (
-                  <SelectItem key={num} value={num.toString()}>
-                    {num} participants
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-2">
+            <Label htmlFor="maxParticipants">Max Participants</Label>
+            <Input
+              id="maxParticipants"
+              type="number"
+              min="2"
+              max="50"
+              value={formData.maxParticipants}
+              onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) }))}
+            />
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreateRoom} disabled={isCreating}>
-            {isCreating ? "Creating..." : "Create Room"}
-          </Button>
-        </DialogFooter>
+          
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Room"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
