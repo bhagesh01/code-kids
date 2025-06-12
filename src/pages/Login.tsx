@@ -33,7 +33,7 @@ const Login = () => {
     try {
       await login(email, password);
       // Navigation will be handled by the useEffect hook above
-    } catch (error: any) {
+    } catch (error) {
       // Error handling is done in login function with toast messages
       setIsLoading(false);
     }
@@ -79,16 +79,6 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-            </div>
-            
-            {/* Test credentials helper */}
-            <div className="p-3 bg-muted rounded-md text-sm">
-              <p className="font-medium mb-1">Test Credentials:</p>
-              <p>Email: justforfunuse01@gmail.com</p>
-              <p>Password: bobby@1234</p>
-              <p className="text-muted-foreground text-xs mt-1">
-                (Uses mock authentication if Supabase login fails)
-              </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
